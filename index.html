@@ -198,8 +198,13 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">What did you find? *</label>
-                    <textarea id="post-desc" rows="3" required placeholder="e.g. 'Fresh Boulevard case just put out!'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm resize-none"></textarea>
+                    <label class="block text-xs font-medium text-green-400 mb-1">Car or Series Found *</label>
+                    <input type="text" id="post-car" required placeholder="e.g. Nissan Skyline or Boulevard Set" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Extra Intel (Optional)</label>
+                    <textarea id="post-desc" rows="2" placeholder="e.g. 'Only 2 left on the front pegs!'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm resize-none"></textarea>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
@@ -259,7 +264,7 @@
             
             let filtered = allPosts.filter(post => {
                 if (search) {
-                    const str = `${post.desc} ${post.store} ${post.location} ${profiles[post.userId] || ''}`.toLowerCase();
+                    const str = `${post.car || ''} ${post.desc} ${post.store} ${post.location} ${profiles[post.userId] || ''}`.toLowerCase();
                     return str.includes(search);
                 }
                 return true;
@@ -294,11 +299,16 @@
             let freshnessClass = 'post-fresh';
             if (isRaided) freshnessClass = 'post-raided relative';
 
-            const postSearchTerm = encodeURIComponent(`${post.store} ${post.location} diecast`);
+            // Safe fallback for older posts that don't have the new 'car' field yet
+            const carName = post.car || 'Hot Wheels';
+            
+            // This is the fix! It now searches for the actual car name instead of the location!
+            const postSearchTerm = encodeURIComponent(`${carName} diecast`);
 
             const div = document.createElement('div');
             div.className = `glass-card rounded-xl overflow-hidden shadow-md border-l-4 border-l-green-500 bg-slate-900/60 p-4 ${freshnessClass}`;
             
+            // Note the new bold blue button styling for the eBay check value link below!
             div.innerHTML = `
                 ${isRaided ? '<div class="raided-stamp">RAIDED</div>' : ''}
                 <div class="flex gap-3 mb-3">
@@ -313,17 +323,21 @@
                         <div class="inline-flex items-center gap-1.5 bg-green-950/40 text-green-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-green-900/50 mt-1 mb-2">
                             <i class="fas fa-map-marker-alt text-green-500"></i> ${post.store} - ${post.location}
                         </div>
-                        <p class="text-slate-200 text-sm leading-relaxed">${post.desc}</p>
+                        
+                        <!-- New Car Display -->
+                        ${post.car ? `<div class="font-bold text-white text-base mb-1">${post.car}</div>` : ''}
+                        
+                        <p class="text-slate-300 text-sm leading-relaxed">${post.desc}</p>
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-4 items-center justify-between border-t border-slate-800 pt-3">
                     <div class="flex gap-4">
-                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${postSearchTerm}" target="_blank" class="text-slate-400 hover:text-[#0064d2] text-xs font-bold flex items-center">
-                            <i class="fab fa-ebay mr-1 text-sm"></i> Check Value
+                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${postSearchTerm}" target="_blank" class="bg-[#0064d2]/20 text-[#0064d2] border border-[#0064d2]/50 hover:bg-[#0064d2] hover:text-white px-3 py-1.5 rounded-lg text-[11px] uppercase font-bold tracking-wider flex items-center transition-all">
+                            <i class="fab fa-ebay mr-1 text-base"></i> Check Value
                         </a>
                     </div>
                     ${!isRaided ? `
-                    <button onclick="markEmpty('${post.id}')" class="text-red-400/80 hover:text-red-400 bg-red-950/30 border border-red-900/50 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider">
+                    <button onclick="markEmpty('${post.id}')" class="text-red-400/80 hover:text-red-400 bg-red-950/30 border border-red-900/50 px-3 py-1.5 rounded-lg text-[11px] uppercase font-bold tracking-wider transition-all">
                         <i class="fas fa-ban mr-1"></i> Pegs Empty (${post.emptyVotes || 0})
                     </button>
                     ` : ''}
@@ -352,6 +366,7 @@
                 userId: currentUser,
                 store: document.getElementById('post-store').value,
                 location: document.getElementById('post-location').value.trim(),
+                car: document.getElementById('post-car').value.trim(), // Capturing the new field!
                 desc: document.getElementById('post-desc').value.trim(),
                 timestamp: Date.now(),
                 emptyVotes: 0
