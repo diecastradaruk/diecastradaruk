@@ -30,29 +30,12 @@
         .font-racing { font-family: 'Racing Sans One', cursive; letter-spacing: 1px; }
         .font-oswald { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; }
         .font-mono-price { font-family: 'JetBrains Mono', monospace; }
-        .tab-active { border-bottom: 2px solid #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.05); }
         
         .glass-card {
             background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(34, 197, 94, 0.15);
         }
-        
-        .img-zoom { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .glass-card:hover .img-zoom { transform: scale(1.05); }
-        
-        @keyframes heartPop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); }
-            100% { transform: scale(1); }
-        }
-        .heart-animate { animation: heartPop 0.3s ease-out; }
-        
-        @keyframes slideFadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .stagger-item { animation: slideFadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
         
         .raided-stamp {
             position: absolute;
@@ -75,18 +58,9 @@
         .post-decayed { opacity: 0.75; filter: grayscale(40%); }
         .post-raided { opacity: 0.5; filter: grayscale(80%); }
 
-        ::-webkit-scrollbar { width: 8px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 4px; }
-
         @keyframes radarSweep {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
-        }
-        @keyframes blipPulse {
-            0% { transform: scale(0); opacity: 0; }
-            50% { transform: scale(1.5); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
         }
         .radar-circle {
             position: relative;
@@ -113,15 +87,6 @@
             animation: radarSweep 2s linear infinite;
             transform-origin: center;
         }
-        .blip {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #4ade80;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #4ade80, 0 0 20px #4ade80;
-            animation: blipPulse 2s infinite ease-out;
-        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col">
@@ -135,7 +100,6 @@
                         <div class="radar-grid"></div>
                         <div class="radar-sweep" style="animation-duration: 3s;"></div>
                         <div class="absolute inset-0 flex items-center justify-center z-10 opacity-90 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
-                            <!-- DeLorean Space Radar Icon -->
                             <svg viewBox="0 0 120 40" class="w-8" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M 5 28 L 5 20 L 25 18 L 40 12 L 70 12 L 105 20 L 115 25 L 115 28 Z" fill="#050510" stroke="#4ade80" stroke-width="1.5"/>
                                 <path d="M 35 18 L 42 14 L 55 14 L 55 18 Z" fill="#4ade80" opacity="0.8"/>
@@ -152,15 +116,11 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <button onclick="document.getElementById('alerts-modal').classList.remove('hidden')" class="text-xs sm:text-sm text-slate-300 hover:text-white flex items-center bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 px-2.5 py-1.5 rounded-lg transition-all">
-                        <i class="fas fa-bell text-cyan-400 sm:mr-1.5"></i>
-                        <span class="hidden sm:inline font-oswald tracking-wide">Alerts</span>
-                    </button>
                     <button id="profile-btn" class="text-xs sm:text-sm text-slate-300 hover:text-white flex items-center bg-slate-900/80 border border-slate-800 hover:border-green-500/50 px-2.5 py-1.5 rounded-lg transition-all">
                         <i class="fas fa-user-astronaut text-base sm:mr-2 text-green-400"></i>
                         <span id="user-display-name" class="hidden sm:inline font-mono-price">Guest</span>
                     </button>
-                    <button id="add-post-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center">
+                    <button id="add-post-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center">
                         <i class="fas fa-bullhorn sm:mr-1.5"></i> <span class="hidden sm:inline">Report Stock</span>
                     </button>
                 </div>
@@ -169,39 +129,19 @@
     </nav>
 
     <main class="flex-grow max-w-3xl mx-auto px-4 sm:px-6 py-6 w-full">
-        
-        <!-- Hero Banner -->
-        <div class="mb-6 relative rounded-2xl overflow-hidden border border-green-900/40 shadow-[0_0_40px_rgba(34,197,94,0.1)] group transition-all duration-500 bg-black">
-            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center opacity-20"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/60"></div>
-            
-            <div class="relative p-6 z-10 flex flex-col md:flex-row items-center justify-center gap-6">
-                <div class="text-center md:text-left flex-grow">
-                    <h1 class="text-3xl sm:text-4xl font-racing mb-2 tracking-wide uppercase flex items-center justify-center md:justify-start">
-                        <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-3 shadow-[0_0_10px_rgba(239,68,68,0.8)]"></span>
-                        <span class="text-white italic">LIVE</span>
-                        <span class="text-green-500 italic ml-2 drop-shadow-[0_0_20px_rgba(34,197,94,0.6)]">RADAR PING</span>
-                    </h1>
-                    <p class="text-slate-300 text-sm font-oswald tracking-wider max-w-md">
-                        Real-time community reports. See who is finding what, and exactly which stores just restocked their pegs across the UK.
-                    </p>
-                </div>
+        <div class="mb-6 relative rounded-2xl overflow-hidden border border-green-900/40 shadow-[0_0_40px_rgba(34,197,94,0.1)] bg-black">
+            <div class="relative p-6 z-10 text-center md:text-left">
+                <h1 class="text-3xl sm:text-4xl font-racing mb-2 tracking-wide uppercase flex items-center justify-center md:justify-start">
+                    <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-3 shadow-[0_0_10px_rgba(239,68,68,0.8)]"></span>
+                    <span class="text-white italic">LIVE</span>
+                    <span class="text-green-500 italic ml-2">RADAR PING</span>
+                </h1>
+                <p class="text-slate-300 text-sm font-oswald tracking-wider">
+                    Real-time community reports. See exactly which stores just restocked their pegs.
+                </p>
             </div>
         </div>
 
-        <!-- Fun Fact Banner -->
-        <div class="mb-6 relative rounded-xl overflow-hidden border border-cyan-900/60 bg-slate-900/80 backdrop-blur-sm">
-            <div class="flex flex-col sm:flex-row items-center p-3.5 px-5">
-                <div class="w-8 h-8 bg-cyan-950/50 rounded-lg flex items-center justify-center border border-cyan-500/40 mb-2 sm:mb-0 sm:mr-3 shrink-0">
-                    <i class="fas fa-lightbulb text-sm text-cyan-400"></i>
-                </div>
-                <div class="flex-grow text-center sm:text-left">
-                    <p id="fun-fact-text" class="text-slate-200 text-xs sm:text-sm font-oswald tracking-wide">Loading today's diecast trivia...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Search / Filter -->
         <div id="filters-section" class="mb-6 flex gap-3 bg-black/80 p-3 rounded-xl border border-slate-800 shadow-lg backdrop-blur-sm sticky top-16 z-30">
             <div class="relative flex-grow">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -211,12 +151,10 @@
             </div>
         </div>
 
-        <!-- Feed Container -->
         <div id="feed-container" class="space-y-4">
             <!-- Posts injected here -->
         </div>
 
-        <!-- Empty State with eBay Affiliate Link -->
         <div id="empty-state" class="text-center py-12 text-slate-400 bg-slate-900/60 rounded-xl border border-slate-800 hidden">
             <i class="fas fa-satellite-dish text-5xl mb-4 text-green-500/40"></i>
             <h3 class="text-lg font-bold text-white mb-2">No signals on the radar</h3>
@@ -229,9 +167,9 @@
     </main>
 
     <!-- Post Modal -->
-    <div id="post-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
-        <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-lg shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden my-auto max-h-[92vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60 shrink-0">
+    <div id="post-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center px-4 py-6">
+        <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-lg shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden my-auto flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60">
                 <h3 class="text-lg font-bold text-green-400 font-oswald tracking-wide flex items-center">
                     <i class="fas fa-satellite-dish mr-2 animate-pulse"></i> REPORT STOCK DROP
                 </h3>
@@ -240,60 +178,33 @@
                 </button>
             </div>
             
-            <form id="post-form" class="p-6 space-y-5 overflow-y-auto">
-                <div class="bg-blue-950/20 border border-blue-900/50 p-3 rounded-lg flex items-start gap-3">
-                    <i class="fas fa-info-circle text-blue-400 mt-0.5"></i>
-                    <p class="text-xs text-blue-300">Help the community by sharing what you just found on the pegs. Uploading a photo proves the stock is real!</p>
-                </div>
-
+            <form id="post-form" class="p-6 space-y-5">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-green-400 mb-1">Store / Retailer *</label>
-                        <select id="post-store" required class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-green-500">
+                        <label class="block text-xs font-medium text-green-400 mb-1">Store *</label>
+                        <select id="post-store" required class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm">
                             <option value="">Select...</option>
                             <option value="Smyths Toys">Smyths Toys</option>
                             <option value="B&M Bargains">B&M Bargains</option>
                             <option value="The Entertainer">The Entertainer</option>
                             <option value="Tesco">Tesco</option>
                             <option value="Asda">Asda</option>
-                            <option value="Sainsbury's">Sainsbury's</option>
-                            <option value="Home Bargains">Home Bargains</option>
-                            <option value="Independent Shop">Independent Shop</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-green-400 mb-1">Town / City *</label>
-                        <input type="text" id="post-location" required placeholder="e.g. Manchester" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-green-500">
+                        <input type="text" id="post-location" required placeholder="e.g. Manchester" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">What did you find? *</label>
-                    <textarea id="post-desc" rows="3" required placeholder="e.g. 'Fresh Boulevard case just put out! I left the Skyline on the front peg.'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-green-500 resize-none"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Peg Photo (Optional but helpful)</label>
-                    <div class="flex gap-2 mb-2">
-                        <button type="button" id="btn-take-photo" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-green-500 text-white px-3 py-2 rounded-lg text-xs flex-1 transition-colors font-bold">
-                            <i class="fas fa-camera mr-1 text-green-400"></i> Snap Photo
-                        </button>
-                    </div>
-
-                    <div id="photo-upload-container">
-                        <input type="file" id="post-photo-file" accept="image/*" capture="environment" class="hidden">
-                        <div id="photo-preview-container" class="hidden relative rounded-lg border border-slate-700 bg-black h-40 flex items-center justify-center overflow-hidden mt-2">
-                            <img id="photo-preview" class="max-h-full object-contain">
-                            <button type="button" id="btn-remove-photo" class="absolute top-2 right-2 bg-black/80 text-white w-8 h-8 rounded-full hover:bg-red-500 text-sm flex items-center justify-center border border-slate-600">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <textarea id="post-desc" rows="3" required placeholder="e.g. 'Fresh Boulevard case just put out!'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm resize-none"></textarea>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
-                    <button type="button" onclick="closeModal('post-modal')" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-lg text-xs font-bold uppercase tracking-wider">Cancel</button>
-                    <button type="submit" id="save-post-btn" class="w-2/3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(34,197,94,0.4)]">Transmit Report</button>
+                    <button type="button" onclick="closeModal('post-modal')" class="w-1/3 bg-slate-800 text-slate-300 py-3 rounded-lg text-xs font-bold uppercase">Cancel</button>
+                    <button type="submit" id="save-post-btn" class="w-2/3 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg text-xs font-bold uppercase shadow-[0_0_15px_rgba(34,197,94,0.4)]">Transmit Report</button>
                 </div>
             </form>
         </div>
@@ -309,37 +220,13 @@
                 </button>
             </div>
             <div class="p-6 space-y-4">
-                <p class="text-xs text-slate-400">Your callsign represents you in the community feed.</p>
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Collector Username *</label>
-                    <input type="text" id="profile-username" placeholder="e.g. UK_Tarmac_Hunter" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-green-500 font-mono-price">
+                    <input type="text" id="profile-username" placeholder="e.g. UK_Hunter" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm">
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button onclick="closeModal('profile-modal')" class="flex-1 bg-slate-800 text-slate-300 py-2 rounded-lg text-xs font-bold uppercase">Cancel</button>
-                    <button id="save-profile-btn" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alerts Modal -->
-    <div id="alerts-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center px-4">
-        <div class="bg-slate-900 border border-cyan-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(6,182,212,0.15)] overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60">
-                <h3 class="text-lg font-bold text-cyan-400 font-oswald tracking-wide flex items-center"><i class="fas fa-satellite-dish mr-2"></i> RADAR ALERTS</h3>
-                <button onclick="closeModal('alerts-modal')" class="text-slate-400 hover:text-white">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs text-slate-400">Get notified when stock drops in your area. (Push notifications coming soon!)</p>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Target City / Town</label>
-                    <input type="text" id="alert-city" placeholder="e.g. London" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-cyan-500">
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button onclick="closeModal('alerts-modal')" class="flex-1 bg-slate-800 text-slate-300 py-2 rounded-lg text-xs font-bold uppercase">Close</button>
-                    <button onclick="showNotification('Alert set for ' + document.getElementById('alert-city').value + '!', 'success'); closeModal('alerts-modal');" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider">Set Target</button>
+                    <button id="save-profile-btn" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-xs font-bold uppercase">Save</button>
                 </div>
             </div>
         </div>
@@ -347,32 +234,19 @@
 
     <div id="notification-area" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-    <script type="module">
-        const diecastFacts = [
-            "The very first 16 Hot Wheels models released in 1968 are known by collectors as the 'Sweet 16'.",
-            "Matchbox got its name in 1953 because the toys were packaged in boxes designed to look like real matchboxes.",
-            "A Super Treasure Hunt (STH) features premium 'Real Rider' rubber tires and brilliant 'Spectraflame' paint.",
-            "Mini GT is renowned for its highly detailed 1:64 scale models, often requiring up to 30 separate parts."
-        ];
-
-        let currentUser = { uid: 'guest_user_1' };
-        let profiles = JSON.parse(localStorage.getItem('radar_profiles')) || { 'guest_user_1': 'GuestHunter', 'user2': 'UK_PegHunter', 'user3': 'DiecastDan' };
-        let cameraPhotoData = null;
-        
-        let allPosts = JSON.parse(localStorage.getItem('radar_posts')) || [
-            { id: 'p1', userId: 'user2', store: 'Smyths Toys', location: 'Milton Keynes', desc: 'Fresh Hot Wheels P case just dropped on the pegs! Left two regular THs on the front row for the next person. Go grab em!', img: 'https://images.unsplash.com/photo-1594951475510-7fa9b240ffb2?w=600&h=400&fit=crop', timestamp: Date.now() - 1200000, likes: ['guest_user_1'], comments: 2, emptyVotes: 0 },
-            { id: 'p2', userId: 'user3', store: 'B&M Bargains', location: 'Leeds', desc: 'Nothing new here today, just the same old fantasy peg warmers. Save your fuel.', img: null, timestamp: Date.now() - 5400000, likes: [], comments: 0, emptyVotes: 0 },
-            { id: 'p3', userId: 'user2', store: 'The Entertainer', location: 'London (Westfield)', desc: 'They just put out the new Mini GT display box by the till. Loads of the new Defenders in stock right now.', img: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=600&h=400&fit=crop', timestamp: Date.now() - 86400000, likes: ['user3'], comments: 5, emptyVotes: 3 }
-        ];
-
-        function saveToLocal() {
-            localStorage.setItem('radar_posts', JSON.stringify(allPosts));
-            localStorage.setItem('radar_profiles', JSON.stringify(profiles));
+    <script>
+        // Use LocalStorage to simulate the database so it works immediately for you!
+        let currentUser = localStorage.getItem('userId');
+        if (!currentUser) {
+            currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('userId', currentUser);
         }
 
+        let profiles = JSON.parse(localStorage.getItem('profiles')) || {};
+        let allPosts = JSON.parse(localStorage.getItem('radar_posts')) || [];
+
         function initApp() {
-            document.getElementById('fun-fact-text').textContent = diecastFacts[Math.floor(Math.random() * diecastFacts.length)];
-            document.getElementById('user-display-name').textContent = profiles[currentUser.uid] || "Set Callsign";
+            document.getElementById('user-display-name').textContent = profiles[currentUser] || "Set Callsign";
             renderFeed();
         }
 
@@ -385,7 +259,7 @@
             
             let filtered = allPosts.filter(post => {
                 if (search) {
-                    const str = `${post.desc || ''} ${post.store || ''} ${post.location || ''} ${profiles[post.userId] || ''}`.toLowerCase();
+                    const str = `${post.desc} ${post.store} ${post.location} ${profiles[post.userId] || ''}`.toLowerCase();
                     return str.includes(search);
                 }
                 return true;
@@ -396,19 +270,15 @@
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
                 
-                // Update the affiliate button dynamically based on search
                 const ebayBtn = document.getElementById('ebay-search-btn');
                 const emptyText = document.getElementById('empty-state-text');
-                const ebayBtnText = document.getElementById('ebay-btn-text');
                 
                 if (search) {
                     emptyText.textContent = `No local signals found for "${search}".`;
                     ebayBtn.href = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(search + ' diecast')}`;
-                    ebayBtnText.textContent = `Search eBay for "${search}"`;
                 } else {
                     emptyText.textContent = "Be the first to report a store restock in your area!";
                     ebayBtn.href = `https://www.ebay.co.uk/sch/i.html?_nkw=hot+wheels+diecast`;
-                    ebayBtnText.textContent = "Check UK Market";
                 }
             } else {
                 emptyState.classList.add('hidden');
@@ -417,170 +287,88 @@
         }
 
         function createPostCard(post, index) {
-            const isLiked = post.likes && post.likes.includes(currentUser.uid);
-            const author = post.userId === currentUser.uid ? 'You' : (profiles[post.userId] || 'Collector');
+            const author = (post.userId === currentUser) ? 'You' : (profiles[post.userId] || 'Collector');
             const timeAgo = Math.max(1, Math.floor((Date.now() - post.timestamp) / 60000));
             const isRaided = post.emptyVotes >= 3;
             
-            let timeStr = '';
-            let freshnessClass = '';
-            
-            if (timeAgo < 120) {
-                timeStr = `<span class="text-green-400 font-bold uppercase tracking-wider text-[10px]"><i class="fas fa-fire mr-1"></i> Fresh Intel</span>`;
-                freshnessClass = 'post-fresh';
-            }
-            else if (timeAgo < 1440) {
-                timeStr = `${Math.floor(timeAgo/60)}h ago`;
-                if(timeAgo > 720) freshnessClass = 'post-decayed';
-            }
-            else {
-                timeStr = `${Math.floor(timeAgo/1440)}d ago`;
-                freshnessClass = 'post-decayed';
-            }
-
+            let freshnessClass = 'post-fresh';
             if (isRaided) freshnessClass = 'post-raided relative';
 
-            const div = document.createElement('div');
-            div.className = `glass-card rounded-xl overflow-hidden stagger-item shadow-md border-l-4 border-l-green-500 bg-slate-900/60 ${freshnessClass}`;
-            div.style.animationDelay = `${Math.min(index * 0.05, 0.4)}s`;
-
-            // Affiliate search term specifically for this post
             const postSearchTerm = encodeURIComponent(`${post.store} ${post.location} diecast`);
 
-            let headerHtml = `
+            const div = document.createElement('div');
+            div.className = `glass-card rounded-xl overflow-hidden shadow-md border-l-4 border-l-green-500 bg-slate-900/60 p-4 ${freshnessClass}`;
+            
+            div.innerHTML = `
                 ${isRaided ? '<div class="raided-stamp">RAIDED</div>' : ''}
-                <div class="p-3 sm:p-4 flex gap-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-green-500/50 flex items-center justify-center text-green-400 font-bold font-oswald text-lg shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                <div class="flex gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-green-500/50 flex items-center justify-center text-green-400 font-bold text-lg shrink-0">
                         ${author.charAt(0).toUpperCase()}
                     </div>
                     <div class="flex-grow">
-                        <div class="flex justify-between items-start mb-1">
-                            <div>
-                                <span class="font-bold text-white text-sm font-mono-price">${author}</span>
-                                <span class="text-slate-400 text-xs ml-2">&bull; ${timeStr}</span>
-                            </div>
-                            ${post.userId === currentUser.uid ? `
-                                <button onclick="deletePost('${post.id}')" class="text-slate-600 hover:text-red-400 transition-colors">
-                                    <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
-                            ` : ''}
+                        <div class="flex justify-between">
+                            <span class="font-bold text-white text-sm">${author}</span>
+                            <span class="text-slate-400 text-xs">${timeAgo}m ago</span>
                         </div>
-                        
-                        <div class="inline-flex items-center gap-1.5 bg-green-950/40 text-green-300 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-green-900/50 mb-2">
+                        <div class="inline-flex items-center gap-1.5 bg-green-950/40 text-green-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-green-900/50 mt-1 mb-2">
                             <i class="fas fa-map-marker-alt text-green-500"></i> ${post.store} - ${post.location}
                         </div>
-
                         <p class="text-slate-200 text-sm leading-relaxed">${post.desc}</p>
                     </div>
                 </div>
-            `;
-
-            let imgHtml = '';
-            if (post.img) {
-                imgHtml = `
-                    <div class="pl-16 pr-4 pb-3">
-                        <img src="${post.img}" class="w-full max-h-64 object-cover rounded-lg border border-slate-700 ${isRaided ? 'opacity-50' : 'opacity-90 hover:opacity-100'} transition-opacity">
-                    </div>
-                `;
-            }
-
-            // Updated footer with Affiliate link
-            let footerHtml = `
-                <div class="pl-16 pr-4 pb-3 flex flex-wrap gap-4 items-center justify-between">
-                    <div class="flex gap-4 sm:gap-6">
-                        <button onclick="toggleLike('${post.id}', this)" class="text-slate-400 hover:text-green-400 transition-colors flex items-center text-xs font-bold group" ${isRaided ? 'disabled' : ''}>
-                            <i class="${isLiked ? 'fas text-green-500' : 'far'} fa-heart mr-1.5 text-sm group-hover:scale-110 transition-transform"></i> 
-                            <span>${post.likes ? post.likes.length : 0}</span>
-                        </button>
-                        <button class="text-slate-400 hover:text-blue-400 transition-colors flex items-center text-xs font-bold group cursor-not-allowed opacity-70" title="Comments coming soon" ${isRaided ? 'disabled' : ''}>
-                            <i class="far fa-comment-alt mr-1.5 text-sm group-hover:scale-110 transition-transform"></i> 
-                            <span>${post.comments || 0}</span>
-                        </button>
-                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${postSearchTerm}" target="_blank" class="text-slate-400 hover:text-[#0064d2] transition-colors flex items-center text-xs font-bold group" title="Check eBay Market Value">
-                            <i class="fab fa-ebay mr-1.5 text-sm group-hover:scale-110 transition-transform"></i>
-                            <span class="hidden sm:inline">Check Value</span>
+                <div class="flex flex-wrap gap-4 items-center justify-between border-t border-slate-800 pt-3">
+                    <div class="flex gap-4">
+                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${postSearchTerm}" target="_blank" class="text-slate-400 hover:text-[#0064d2] text-xs font-bold flex items-center">
+                            <i class="fab fa-ebay mr-1 text-sm"></i> Check Value
                         </a>
                     </div>
                     ${!isRaided ? `
-                    <button onclick="markEmpty('${post.id}')" class="text-red-400/80 hover:text-red-400 bg-red-950/30 hover:bg-red-950/50 border border-red-900/50 px-2.5 py-1 rounded text-[10px] uppercase font-bold tracking-wider transition-colors">
+                    <button onclick="markEmpty('${post.id}')" class="text-red-400/80 hover:text-red-400 bg-red-950/30 border border-red-900/50 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider">
                         <i class="fas fa-ban mr-1"></i> Pegs Empty (${post.emptyVotes || 0})
                     </button>
                     ` : ''}
                 </div>
             `;
-
-            div.innerHTML = headerHtml + imgHtml + footerHtml;
             return div;
         }
 
         document.getElementById('filter-search').addEventListener('input', renderFeed);
-
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         
         document.getElementById('add-post-btn').addEventListener('click', () => {
             document.getElementById('post-form').reset();
-            cameraPhotoData = null;
-            document.getElementById('photo-preview-container').classList.add('hidden');
             document.getElementById('post-modal').classList.remove('hidden');
         });
 
         document.getElementById('profile-btn').addEventListener('click', () => {
-            document.getElementById('profile-username').value = profiles[currentUser.uid] || '';
+            document.getElementById('profile-username').value = profiles[currentUser] || '';
             document.getElementById('profile-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('btn-take-photo').addEventListener('click', () => {
-            document.getElementById('post-photo-file').click();
-        });
-
-        document.getElementById('post-photo-file').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                cameraPhotoData = event.target.result;
-                document.getElementById('photo-preview').src = cameraPhotoData;
-                document.getElementById('photo-preview-container').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        });
-
-        document.getElementById('btn-remove-photo').addEventListener('click', () => {
-            cameraPhotoData = null;
-            document.getElementById('post-photo-file').value = '';
-            document.getElementById('photo-preview-container').classList.add('hidden');
         });
 
         document.getElementById('post-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const newPost = {
-                id: 'local_' + Date.now(),
-                userId: currentUser.uid,
+                id: 'post_' + Date.now(),
+                userId: currentUser,
                 store: document.getElementById('post-store').value,
                 location: document.getElementById('post-location').value.trim(),
                 desc: document.getElementById('post-desc').value.trim(),
-                img: cameraPhotoData,
                 timestamp: Date.now(),
-                likes: [],
-                comments: 0,
                 emptyVotes: 0
             };
-
-            allPosts.unshift(newPost);
-            saveToLocal();
+            allPosts.push(newPost);
+            localStorage.setItem('radar_posts', JSON.stringify(allPosts));
+            
             showNotification("Intel Broadcasted!");
             closeModal('post-modal');
-            
-            document.getElementById('filter-search').value = '';
-            window.scrollTo({top: 0, behavior: 'smooth'});
             renderFeed();
         });
 
         document.getElementById('save-profile-btn').addEventListener('click', () => {
             const name = document.getElementById('profile-username').value.trim();
             if (name) {
-                profiles[currentUser.uid] = name;
-                saveToLocal();
+                profiles[currentUser] = name;
+                localStorage.setItem('profiles', JSON.stringify(profiles));
                 document.getElementById('user-display-name').textContent = name;
                 showNotification("Callsign updated!");
                 closeModal('profile-modal');
@@ -593,54 +381,23 @@
                 const post = allPosts.find(p => p.id === postId);
                 if (post) {
                     post.emptyVotes = (post.emptyVotes || 0) + 1;
-                    saveToLocal();
-                    renderFeed();
+                    localStorage.setItem('radar_posts', JSON.stringify(allPosts));
                     showNotification(post.emptyVotes >= 3 ? "Post stamped as RAIDED!" : "Empty vote recorded.");
+                    renderFeed();
                 }
             }
         };
 
-        window.toggleLike = (postId, btn) => {
-            const post = allPosts.find(p => p.id === postId);
-            if (!post) return;
-            
-            const icon = btn.querySelector('i');
-            icon.classList.add('heart-animate');
-            setTimeout(() => icon.classList.remove('heart-animate'), 300);
-
-            const hasLiked = post.likes.includes(currentUser.uid);
-            if (hasLiked) {
-                post.likes = post.likes.filter(id => id !== currentUser.uid);
-            } else {
-                post.likes.push(currentUser.uid);
-            }
-            saveToLocal();
-            renderFeed();
-        };
-
-        window.deletePost = (postId) => {
-            if(confirm("Delete this signal?")) {
-                allPosts = allPosts.filter(p => p.id !== postId);
-                saveToLocal();
-                renderFeed();
-                showNotification("Signal deleted.");
-            }
-        };
-
-        function showNotification(msg, type = 'success') {
+        function showNotification(msg) {
             const area = document.getElementById('notification-area');
             const notif = document.createElement('div');
-            const colors = type === 'success' ? 'bg-green-700 border border-green-400' : 'bg-red-700 border border-red-400';
-            notif.className = `p-3 rounded-lg text-white shadow-[0_0_15px_rgba(0,0,0,0.6)] text-xs font-oswald tracking-wide uppercase ${colors} transition-opacity duration-300`;
+            notif.className = `p-3 rounded-lg text-white shadow-lg text-xs font-oswald uppercase bg-green-700 border border-green-400`;
             notif.textContent = msg;
             area.appendChild(notif);
-            setTimeout(() => {
-                notif.classList.add('opacity-0');
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
+            setTimeout(() => { notif.remove(); }, 3000);
         }
 
-        setTimeout(initApp, 100);
+        initApp();
     </script>
 </body>
 </html>
