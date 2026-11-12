@@ -135,7 +135,7 @@
                         <div class="radar-grid"></div>
                         <div class="radar-sweep" style="animation-duration: 3s;"></div>
                         <div class="absolute inset-0 flex items-center justify-center z-10 opacity-90 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
-                            <!-- New DeLorean Space Radar Icon -->
+                            <!-- DeLorean Space Radar Icon -->
                             <svg viewBox="0 0 120 40" class="w-8" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M 5 28 L 5 20 L 25 18 L 40 12 L 70 12 L 105 20 L 115 25 L 115 28 Z" fill="#050510" stroke="#4ade80" stroke-width="1.5"/>
                                 <path d="M 35 18 L 42 14 L 55 14 L 55 18 Z" fill="#4ade80" opacity="0.8"/>
@@ -152,19 +152,14 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <!-- Alerts Button -->
                     <button onclick="document.getElementById('alerts-modal').classList.remove('hidden')" class="text-xs sm:text-sm text-slate-300 hover:text-white flex items-center bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 px-2.5 py-1.5 rounded-lg transition-all">
                         <i class="fas fa-bell text-cyan-400 sm:mr-1.5"></i>
                         <span class="hidden sm:inline font-oswald tracking-wide">Alerts</span>
                     </button>
-
-                    <!-- Profile Callsign Button -->
                     <button id="profile-btn" class="text-xs sm:text-sm text-slate-300 hover:text-white flex items-center bg-slate-900/80 border border-slate-800 hover:border-green-500/50 px-2.5 py-1.5 rounded-lg transition-all">
                         <i class="fas fa-user-astronaut text-base sm:mr-2 text-green-400"></i>
                         <span id="user-display-name" class="hidden sm:inline font-mono-price">Guest</span>
                     </button>
-
-                    <!-- Add Post Button -->
                     <button id="add-post-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center">
                         <i class="fas fa-bullhorn sm:mr-1.5"></i> <span class="hidden sm:inline">Report Stock</span>
                     </button>
@@ -212,7 +207,7 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fas fa-search text-slate-400"></i>
                 </div>
-                <input type="text" id="filter-search" placeholder="Search a town, store, or car (e.g. 'Leeds' or 'Smyths')..." class="w-full pl-10 bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-green-500 focus:border-green-500">
+                <input type="text" id="filter-search" placeholder="Search a town, store, or car (e.g. 'Leeds' or 'Skyline')..." class="w-full pl-10 bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-green-500 focus:border-green-500">
             </div>
         </div>
 
@@ -221,15 +216,19 @@
             <!-- Posts injected here -->
         </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="text-center py-16 text-slate-400 bg-slate-900/60 rounded-xl border border-slate-800 hidden">
+        <!-- Empty State with eBay Affiliate Link -->
+        <div id="empty-state" class="text-center py-12 text-slate-400 bg-slate-900/60 rounded-xl border border-slate-800 hidden">
             <i class="fas fa-satellite-dish text-5xl mb-4 text-green-500/40"></i>
             <h3 class="text-lg font-bold text-white mb-2">No signals on the radar</h3>
-            <p class="text-sm max-w-md mx-auto">Be the first to report a store restock in your area!</p>
+            <p id="empty-state-text" class="text-sm max-w-md mx-auto mb-6">Be the first to report a store restock in your area!</p>
+            
+            <a id="ebay-search-btn" href="https://www.ebay.co.uk/sch/i.html?_nkw=hot+wheels+diecast" target="_blank" class="inline-flex items-center gap-2 bg-[#0064d2] hover:bg-[#0053a0] text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,100,210,0.4)]">
+                <i class="fab fa-ebay text-2xl"></i> <span id="ebay-btn-text">Check UK Market</span>
+            </a>
         </div>
     </main>
 
-    <!-- MODAL 1: Unified Post Signal Modal -->
+    <!-- Post Modal -->
     <div id="post-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
         <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-lg shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden my-auto max-h-[92vh] flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60 shrink-0">
@@ -268,13 +267,11 @@
                     </div>
                 </div>
 
-                <!-- Description -->
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">What did you find? *</label>
                     <textarea id="post-desc" rows="3" required placeholder="e.g. 'Fresh Boulevard case just put out! I left the Skyline on the front peg.'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-green-500 resize-none"></textarea>
                 </div>
 
-                <!-- Photo Section -->
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Peg Photo (Optional but helpful)</label>
                     <div class="flex gap-2 mb-2">
@@ -302,7 +299,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Profile Callsign Modal -->
+    <!-- Profile Modal -->
     <div id="profile-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center px-4">
         <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60">
@@ -325,7 +322,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: Radar Alerts Modal -->
+    <!-- Alerts Modal -->
     <div id="alerts-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-50 flex justify-center items-center px-4">
         <div class="bg-slate-900 border border-cyan-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(6,182,212,0.15)] overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-black/60">
@@ -351,7 +348,6 @@
     <div id="notification-area" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
     <script type="module">
-        // Dummy data for offline/preview logic since we removed complex Firebase setup for the community pivot preview
         const diecastFacts = [
             "The very first 16 Hot Wheels models released in 1968 are known by collectors as the 'Sweet 16'.",
             "Matchbox got its name in 1953 because the toys were packaged in boxes designed to look like real matchboxes.",
@@ -376,7 +372,7 @@
 
         function initApp() {
             document.getElementById('fun-fact-text').textContent = diecastFacts[Math.floor(Math.random() * diecastFacts.length)];
-            document.getElementById('user-display-name').textContent = "Set Callsign";
+            document.getElementById('user-display-name').textContent = profiles[currentUser.uid] || "Set Callsign";
             renderFeed();
         }
 
@@ -399,6 +395,21 @@
 
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
+                
+                // Update the affiliate button dynamically based on search
+                const ebayBtn = document.getElementById('ebay-search-btn');
+                const emptyText = document.getElementById('empty-state-text');
+                const ebayBtnText = document.getElementById('ebay-btn-text');
+                
+                if (search) {
+                    emptyText.textContent = `No local signals found for "${search}".`;
+                    ebayBtn.href = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(search + ' diecast')}`;
+                    ebayBtnText.textContent = `Search eBay for "${search}"`;
+                } else {
+                    emptyText.textContent = "Be the first to report a store restock in your area!";
+                    ebayBtn.href = `https://www.ebay.co.uk/sch/i.html?_nkw=hot+wheels+diecast`;
+                    ebayBtnText.textContent = "Check UK Market";
+                }
             } else {
                 emptyState.classList.add('hidden');
                 filtered.forEach((post, i) => container.appendChild(createPostCard(post, i)));
@@ -420,7 +431,7 @@
             }
             else if (timeAgo < 1440) {
                 timeStr = `${Math.floor(timeAgo/60)}h ago`;
-                if(timeAgo > 720) freshnessClass = 'post-decayed'; // Dim after 12 hours
+                if(timeAgo > 720) freshnessClass = 'post-decayed';
             }
             else {
                 timeStr = `${Math.floor(timeAgo/1440)}d ago`;
@@ -433,7 +444,9 @@
             div.className = `glass-card rounded-xl overflow-hidden stagger-item shadow-md border-l-4 border-l-green-500 bg-slate-900/60 ${freshnessClass}`;
             div.style.animationDelay = `${Math.min(index * 0.05, 0.4)}s`;
 
-            // Header (Chat-style)
+            // Affiliate search term specifically for this post
+            const postSearchTerm = encodeURIComponent(`${post.store} ${post.location} diecast`);
+
             let headerHtml = `
                 ${isRaided ? '<div class="raided-stamp">RAIDED</div>' : ''}
                 <div class="p-3 sm:p-4 flex gap-3">
@@ -462,7 +475,6 @@
                 </div>
             `;
 
-            // Image (if any)
             let imgHtml = '';
             if (post.img) {
                 imgHtml = `
@@ -472,10 +484,10 @@
                 `;
             }
 
-            // Action Footer
+            // Updated footer with Affiliate link
             let footerHtml = `
                 <div class="pl-16 pr-4 pb-3 flex flex-wrap gap-4 items-center justify-between">
-                    <div class="flex gap-6">
+                    <div class="flex gap-4 sm:gap-6">
                         <button onclick="toggleLike('${post.id}', this)" class="text-slate-400 hover:text-green-400 transition-colors flex items-center text-xs font-bold group" ${isRaided ? 'disabled' : ''}>
                             <i class="${isLiked ? 'fas text-green-500' : 'far'} fa-heart mr-1.5 text-sm group-hover:scale-110 transition-transform"></i> 
                             <span>${post.likes ? post.likes.length : 0}</span>
@@ -484,6 +496,10 @@
                             <i class="far fa-comment-alt mr-1.5 text-sm group-hover:scale-110 transition-transform"></i> 
                             <span>${post.comments || 0}</span>
                         </button>
+                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${postSearchTerm}" target="_blank" class="text-slate-400 hover:text-[#0064d2] transition-colors flex items-center text-xs font-bold group" title="Check eBay Market Value">
+                            <i class="fab fa-ebay mr-1.5 text-sm group-hover:scale-110 transition-transform"></i>
+                            <span class="hidden sm:inline">Check Value</span>
+                        </a>
                     </div>
                     ${!isRaided ? `
                     <button onclick="markEmpty('${post.id}')" class="text-red-400/80 hover:text-red-400 bg-red-950/30 hover:bg-red-950/50 border border-red-900/50 px-2.5 py-1 rounded text-[10px] uppercase font-bold tracking-wider transition-colors">
@@ -499,7 +515,6 @@
 
         document.getElementById('filter-search').addEventListener('input', renderFeed);
 
-        // Modals
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         
         document.getElementById('add-post-btn').addEventListener('click', () => {
@@ -514,27 +529,6 @@
             document.getElementById('profile-modal').classList.remove('hidden');
         });
 
-        // Form Logic
-        document.querySelectorAll('input[name="post-type"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const type = e.target.value;
-                const restockFields = document.getElementById('restock-fields');
-                const storeInput = document.getElementById('post-store');
-                const locInput = document.getElementById('post-location');
-                
-                if (type === 'restock') {
-                    restockFields.classList.remove('hidden');
-                    storeInput.required = true;
-                    locInput.required = true;
-                } else {
-                    restockFields.classList.add('hidden');
-                    storeInput.required = false;
-                    locInput.required = false;
-                }
-            });
-        });
-
-        // Photo Upload
         document.getElementById('btn-take-photo').addEventListener('click', () => {
             document.getElementById('post-photo-file').click();
         });
@@ -557,10 +551,8 @@
             document.getElementById('photo-preview-container').classList.add('hidden');
         });
 
-        // Submit Post (Updated for Chat/Spotter layout)
         document.getElementById('post-form').addEventListener('submit', (e) => {
             e.preventDefault();
-
             const newPost = {
                 id: 'local_' + Date.now(),
                 userId: currentUser.uid,
@@ -579,13 +571,11 @@
             showNotification("Intel Broadcasted!");
             closeModal('post-modal');
             
-            // Clear search to ensure new post is visible
             document.getElementById('filter-search').value = '';
             window.scrollTo({top: 0, behavior: 'smooth'});
             renderFeed();
         });
 
-        // Profile Save
         document.getElementById('save-profile-btn').addEventListener('click', () => {
             const name = document.getElementById('profile-username').value.trim();
             if (name) {
