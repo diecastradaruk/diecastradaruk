@@ -152,7 +152,7 @@
                 </button>
             </div>
             <form id="post-form" class="p-5 space-y-4">
-                <!-- Image Upload (NEW) -->
+                <!-- Image Upload (UPDATED FOR CAMERA FIX) -->
                 <div class="w-full">
                     <label class="block text-xs font-bold text-green-400 mb-1.5 uppercase tracking-wider">Photographic Proof (Optional)</label>
                     <div class="flex items-center justify-center w-full">
@@ -163,7 +163,7 @@
                             </div>
                             <img id="image-preview" class="absolute inset-0 w-full h-full object-cover hidden opacity-80" />
                             <div id="image-remove-btn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hidden" onclick="event.preventDefault(); removeImage();"><i class="fas fa-times text-xs"></i></div>
-                            <input id="post-image" type="file" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)" />
+                            <input id="post-image" type="file" accept="image/*" capture="camera" class="hidden" onchange="previewImage(event)" />
                         </label>
                     </div>
                 </div>
