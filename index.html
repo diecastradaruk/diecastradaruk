@@ -163,7 +163,7 @@
                             </div>
                             <img id="image-preview" class="absolute inset-0 w-full h-full object-cover hidden opacity-80" />
                             <div id="image-remove-btn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hidden" onclick="event.preventDefault(); removeImage();"><i class="fas fa-times text-xs"></i></div>
-                            <input id="post-image" type="file" accept="image/*" class="hidden" onchange="previewImage(event)" />
+                            <input id="post-image" type="file" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)" />
                         </label>
                     </div>
                 </div>
@@ -259,12 +259,12 @@
         // PASTE YOUR FIREBASE KEYS HERE
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
-            authDomain: "diecast-radar-5c38d.firebaseapp.com",
-            projectId: "diecast-radar-5c38d",
-            storageBucket: "diecast-radar-5c38d.firebasestorage.app",
-            messagingSenderId: "918192680035",
-            appId: "1:918192680035:web:d11555276d973b993b5c56"
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "PASTE_YOUR_AUTH_DOMAIN_HERE",
+            projectId: "PASTE_YOUR_PROJECT_ID_HERE",
+            storageBucket: "PASTE_YOUR_STORAGE_BUCKET_HERE",
+            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "PASTE_YOUR_APP_ID_HERE"
         };
         // ==========================================
 
