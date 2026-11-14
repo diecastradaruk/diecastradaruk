@@ -85,20 +85,53 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center group cursor-pointer" onclick="switchTab('feed')">
-                    <div class="w-10 h-10 mr-2.5 radar-circle flex-shrink-0 border-2">
-                        <div class="radar-grid"></div>
-                        <div class="radar-sweep" style="animation-duration: 3s;"></div>
-                        <div class="absolute inset-0 flex items-center justify-center z-10 opacity-90 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
-                            <svg viewBox="0 0 120 40" class="w-8" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M 5 28 L 5 20 L 25 18 L 40 12 L 70 12 L 105 20 L 115 25 L 115 28 Z" fill="#050510" stroke="#4ade80" stroke-width="1.5"/>
-                                <path d="M 35 18 L 42 14 L 55 14 L 55 18 Z" fill="#4ade80" opacity="0.8"/>
-                                <path d="M 58 14 L 68 14 L 85 18 L 58 18 Z" fill="#4ade80" opacity="0.8"/>
+                    <div class="w-12 h-12 mr-2.5 relative flex-shrink-0 rounded-full border-2 border-slate-700 bg-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.3)] overflow-hidden flex items-center justify-center group-hover:border-cyan-500 transition-colors duration-300">
+                        <!-- Inner ring matching the metallic edge -->
+                        <div class="absolute inset-0 rounded-full border-[3px] border-black/50 z-20 pointer-events-none"></div>
+                        <div class="absolute inset-0 rounded-full border border-cyan-500/50 z-20 pointer-events-none m-[2px]"></div>
+                        
+                        <!-- Radar Grid -->
+                        <div class="absolute inset-0 z-0 opacity-70" style="background: linear-gradient(90deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), linear-gradient(0deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), radial-gradient(circle, transparent 32%, rgba(34, 197, 94, 0.3) 33%, transparent 34%), radial-gradient(circle, transparent 65%, rgba(34, 197, 94, 0.3) 66%, transparent 67%);"></div>
+
+                        <!-- Sweep -->
+                        <div class="radar-sweep absolute inset-0 z-0" style="background: conic-gradient(from 0deg, transparent 75%, rgba(34, 197, 94, 0.6) 100%); animation-duration: 3s;"></div>
+
+                        <!-- Little glowing map markers from the image -->
+                        <i class="fas fa-map-marker-alt absolute top-2 left-2 text-[7px] text-cyan-400 z-10 drop-shadow-[0_0_3px_#22d3ee]"></i>
+                        <i class="fas fa-map-marker-alt absolute bottom-2 right-2 text-[6px] text-green-400 z-10 drop-shadow-[0_0_3px_#4ade80]"></i>
+                        
+                        <!-- New Skyline-style Car Silhouette -->
+                        <div class="absolute inset-0 flex items-center justify-center z-10 drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] mt-1">
+                            <svg viewBox="0 0 100 40" class="w-[34px]" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="car-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#475569" />
+                                        <stop offset="100%" stop-color="#0f172a" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- Big Spoiler -->
+                                <path d="M 85 20 L 85 10 L 98 10 L 98 12 L 87 12 L 87 20 Z" fill="#94a3b8"/> 
+                                <!-- Main Body -->
+                                <path d="M 5 28 L 5 22 L 20 20 L 35 12 L 60 12 L 75 16 L 90 20 L 98 22 L 98 28 Z" fill="url(#car-grad)" stroke="#cbd5e1" stroke-width="0.5"/>
+                                <!-- Windows -->
+                                <path d="M 32 18 L 40 14 L 55 14 L 55 18 Z" fill="#bae6fd" opacity="0.7"/>
+                                <path d="M 58 14 L 70 14 L 78 18 L 58 18 Z" fill="#bae6fd" opacity="0.7"/>
+                                <!-- Wheels -->
+                                <circle cx="22" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
+                                <circle cx="80" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
+                                <!-- Headlight -->
+                                <rect x="5" y="23" width="4" height="2" fill="#e0f2fe" opacity="0.9" rx="1"/>
+                                <!-- Tail light -->
+                                <circle cx="95" cy="24" r="1.5" fill="#ef4444" opacity="0.9"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="font-racing tracking-wide flex items-baseline select-none">
-                        <span class="text-xl sm:text-2xl text-white italic drop-shadow-md">DIECAST</span>
-                        <span class="text-xl sm:text-2xl text-green-500 italic ml-1.5 drop-shadow-[0_0_5px_rgba(34,197,94,0.4)]">RADAR</span>
+                    <div class="font-racing tracking-wide flex items-baseline select-none flex-col sm:flex-row sm:items-baseline leading-none sm:leading-normal justify-center mt-1 sm:mt-0">
+                        <div>
+                            <span class="text-xl sm:text-2xl text-blue-200 drop-shadow-[0_0_8px_rgba(191,219,254,0.6)]">DIECAST</span>
+                            <span class="text-xl sm:text-2xl text-cyan-400 ml-1 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">RADAR</span>
+                        </div>
+                        <span class="text-xs sm:text-sm font-bold text-green-400 sm:ml-1.5 tracking-widest drop-shadow-[0_0_5px_rgba(74,222,128,0.6)] self-start sm:self-auto font-oswald pl-1 sm:pl-0 pt-0.5 sm:pt-0">UK</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
@@ -106,6 +139,10 @@
                         <img id="user-avatar" src="" class="w-5 h-5 rounded-full hidden mr-2 border border-green-500">
                         <i id="auth-icon" class="fab fa-google text-base sm:mr-2 text-white"></i>
                         <span id="auth-text" class="hidden sm:inline font-mono-price">Sign In</span>
+                    </button>
+                    <!-- Leaderboard Button -->
+                    <button id="leaderboard-btn" class="text-slate-400 hover:text-yellow-400 bg-slate-900/80 border border-slate-700 hover:border-yellow-500/50 px-3 py-1.5 rounded-lg transition-all flex items-center">
+                        <i class="fas fa-trophy"></i>
                     </button>
                     <!-- Alerts Button -->
                     <button id="alerts-btn" class="text-slate-400 hover:text-green-400 bg-slate-900/80 border border-slate-700 hover:border-green-500/50 px-3 py-1.5 rounded-lg transition-all flex items-center relative hidden">
@@ -287,6 +324,26 @@
                     <div class="text-xs font-bold text-slate-300">Browser Notifications</div>
                     <button id="enable-notifications-btn" class="text-[10px] uppercase font-bold bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded transition-all">Enable</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-50 flex justify-center items-center px-4">
+        <div class="bg-slate-900 border border-yellow-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(234,179,8,0.15)] overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-black/80 sticky top-0">
+                <h3 class="text-base font-bold text-yellow-400 font-oswald tracking-wide flex items-center">
+                    <i class="fas fa-trophy mr-2 text-yellow-500 drop-shadow-[0_0_5px_#eab308]"></i> TOP HUNTERS
+                </h3>
+                <button type="button" onclick="closeModal('leaderboard-modal')" class="text-slate-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="px-5 py-2 bg-slate-800/50 border-b border-slate-700/50">
+                <p class="text-[10px] uppercase font-bold tracking-wider text-slate-400 text-center">Ranked by radar pings in the last 7 days</p>
+            </div>
+            <div class="p-0 overflow-y-auto" id="leaderboard-container">
+                <!-- Ranks injected here -->
             </div>
         </div>
     </div>
@@ -658,6 +715,61 @@
                 submitBtn.disabled = false;
             }
         });
+
+        // --- Leaderboard Logic ---
+        document.getElementById('leaderboard-btn').addEventListener('click', () => {
+            renderLeaderboard();
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
+        });
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '';
+            
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            const recentPosts = allPosts.filter(p => p.timestamp >= sevenDaysAgo);
+            
+            const userCounts = {};
+            recentPosts.forEach(p => {
+                if (!p.userId) return;
+                if (!userCounts[p.userId]) {
+                    userCounts[p.userId] = { 
+                        name: p.userName || 'Unknown Hunter', 
+                        photo: p.userPhoto || 'https://via.placeholder.com/40',
+                        count: 0 
+                    };
+                }
+                userCounts[p.userId].count++;
+            });
+            
+            const sortedUsers = Object.values(userCounts).sort((a, b) => b.count - a.count);
+            
+            if (sortedUsers.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No intel transmitted this week yet.<br>Be the first to hit the radar!</div>';
+                return;
+            }
+            
+            sortedUsers.forEach((user, index) => {
+                let rankIcon = `<span class="text-slate-500 font-bold text-lg w-8 text-center">${index + 1}</span>`;
+                if (index === 0) rankIcon = `<i class="fas fa-medal text-yellow-400 text-2xl drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] w-8 text-center"></i>`;
+                if (index === 1) rankIcon = `<i class="fas fa-medal text-slate-300 text-xl drop-shadow-[0_0_8px_rgba(203,213,225,0.6)] w-8 text-center"></i>`;
+                if (index === 2) rankIcon = `<i class="fas fa-medal text-amber-600 text-xl drop-shadow-[0_0_8px_rgba(217,119,6,0.6)] w-8 text-center"></i>`;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-4 border-b border-slate-800/50 ${index === 0 ? 'bg-yellow-900/10' : ''}`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        ${rankIcon}
+                        <img src="${user.photo}" class="w-10 h-10 rounded-full border ${index === 0 ? 'border-yellow-400' : 'border-slate-600'} object-cover shadow-md">
+                        <div class="font-bold ${index === 0 ? 'text-yellow-400' : 'text-slate-200'} text-sm">${user.name}</div>
+                    </div>
+                    <div class="bg-slate-800 ${index === 0 ? 'text-yellow-400 border-yellow-500/30' : 'text-green-400 border-green-500/30'} font-mono-price text-xs px-3 py-1.5 rounded-full border">
+                        ${user.count} <i class="fas fa-satellite-dish ml-1"></i>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
 
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         window.toggleCustomStore = (val) => {
