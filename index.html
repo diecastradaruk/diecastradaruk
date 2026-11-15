@@ -86,21 +86,14 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center group cursor-pointer" onclick="switchTab('feed')">
                     <div class="w-12 h-12 mr-2.5 relative flex-shrink-0 rounded-full border-2 border-slate-700 bg-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.3)] overflow-hidden flex items-center justify-center group-hover:border-cyan-500 transition-colors duration-300">
-                        <!-- Inner ring matching the metallic edge -->
                         <div class="absolute inset-0 rounded-full border-[3px] border-black/50 z-20 pointer-events-none"></div>
                         <div class="absolute inset-0 rounded-full border border-cyan-500/50 z-20 pointer-events-none m-[2px]"></div>
                         
-                        <!-- Radar Grid -->
                         <div class="absolute inset-0 z-0 opacity-70" style="background: linear-gradient(90deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), linear-gradient(0deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), radial-gradient(circle, transparent 32%, rgba(34, 197, 94, 0.3) 33%, transparent 34%), radial-gradient(circle, transparent 65%, rgba(34, 197, 94, 0.3) 66%, transparent 67%);"></div>
-
-                        <!-- Sweep -->
                         <div class="radar-sweep absolute inset-0 z-0" style="background: conic-gradient(from 0deg, transparent 75%, rgba(34, 197, 94, 0.6) 100%); animation-duration: 3s;"></div>
-
-                        <!-- Little glowing map markers from the image -->
                         <i class="fas fa-map-marker-alt absolute top-2 left-2 text-[7px] text-cyan-400 z-10 drop-shadow-[0_0_3px_#22d3ee]"></i>
                         <i class="fas fa-map-marker-alt absolute bottom-2 right-2 text-[6px] text-green-400 z-10 drop-shadow-[0_0_3px_#4ade80]"></i>
                         
-                        <!-- New Skyline-style Car Silhouette -->
                         <div class="absolute inset-0 flex items-center justify-center z-10 drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] mt-1">
                             <svg viewBox="0 0 100 40" class="w-[34px]" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
@@ -109,19 +102,13 @@
                                         <stop offset="100%" stop-color="#0f172a" />
                                     </linearGradient>
                                 </defs>
-                                <!-- Big Spoiler -->
                                 <path d="M 85 20 L 85 10 L 98 10 L 98 12 L 87 12 L 87 20 Z" fill="#94a3b8"/> 
-                                <!-- Main Body -->
                                 <path d="M 5 28 L 5 22 L 20 20 L 35 12 L 60 12 L 75 16 L 90 20 L 98 22 L 98 28 Z" fill="url(#car-grad)" stroke="#cbd5e1" stroke-width="0.5"/>
-                                <!-- Windows -->
                                 <path d="M 32 18 L 40 14 L 55 14 L 55 18 Z" fill="#bae6fd" opacity="0.7"/>
                                 <path d="M 58 14 L 70 14 L 78 18 L 58 18 Z" fill="#bae6fd" opacity="0.7"/>
-                                <!-- Wheels -->
                                 <circle cx="22" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
                                 <circle cx="80" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
-                                <!-- Headlight -->
                                 <rect x="5" y="23" width="4" height="2" fill="#e0f2fe" opacity="0.9" rx="1"/>
-                                <!-- Tail light -->
                                 <circle cx="95" cy="24" r="1.5" fill="#ef4444" opacity="0.9"/>
                             </svg>
                         </div>
@@ -182,7 +169,7 @@
                 <i class="fas fa-map-marked-alt sm:mr-1.5"></i> <span class="hidden sm:inline">Map</span>
             </button>
             <button onclick="switchTab('news')" id="tab-news" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
-                <i class="fas fa-globe sm:mr-1.5"></i> <span class="hidden sm:inline">News</span>
+                <i class="fab fa-youtube text-red-500 sm:mr-1.5"></i> <span class="hidden sm:inline">Videos</span>
             </button>
         </div>
 
@@ -223,21 +210,21 @@
                 </div>
             </div>
 
-            <!-- Global News View -->
+            <!-- Global News View (Upgraded to YouTube Videos) -->
             <div id="news-container" class="hidden pb-10 space-y-5" data-loaded="false">
                 <div class="bg-cyan-900/20 border border-cyan-500/30 rounded-xl p-4 mb-2 flex items-center shadow-lg">
-                    <i class="fas fa-satellite text-2xl text-cyan-400 mr-4"></i>
+                    <i class="fab fa-youtube text-4xl text-red-600 mr-4 drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]"></i>
                     <div>
-                        <h4 class="text-cyan-400 font-bold font-oswald tracking-wide">GLOBAL INTEL NETWORK</h4>
-                        <p class="text-xs text-slate-400">Intercepting latest diecast news, sneak peeks, and release articles from top worldwide blogs.</p>
+                        <h4 class="text-cyan-400 font-bold font-oswald tracking-wide">GLOBAL VIDEO INTEL</h4>
+                        <p class="text-xs text-slate-400">Intercepting latest unboxings and sneek peaks directly from YouTube.</p>
                     </div>
                 </div>
                 <div id="news-loading" class="text-center py-12">
-                    <div class="w-12 h-12 mx-auto border-4 border-slate-800 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
-                    <p class="text-slate-400 font-oswald tracking-widest text-xs uppercase">Intercepting global transmissions...</p>
+                    <div class="w-12 h-12 mx-auto border-4 border-slate-800 border-t-red-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-slate-400 font-oswald tracking-widest text-xs uppercase">Intercepting video feed...</p>
                 </div>
                 <div id="news-feed-list" class="space-y-4">
-                    <!-- News cards injected here -->
+                    <!-- Video cards injected here -->
                 </div>
             </div>
         </div>
@@ -392,7 +379,7 @@
         // PASTE YOUR FIREBASE KEYS HERE
         // ==========================================
         const firebaseConfig = {
-             apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
+          apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
   authDomain: "diecast-radar-5c38d.firebaseapp.com",
   projectId: "diecast-radar-5c38d",
   storageBucket: "diecast-radar-5c38d.firebasestorage.app",
@@ -441,51 +428,57 @@
             if (confirmActionCallback) confirmActionCallback();
         });
         
-        // --- Global News Feed Fetcher ---
+        // --- YouTube Video Feeds from Top Channels ---
         async function fetchDiecastNews() {
             const container = document.getElementById('news-container');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
             
-            if (container.dataset.loaded === 'true') return; // Don't fetch twice in one session
+            if (container.dataset.loaded === 'true') return; 
             
             try {
-                // Using RSS2JSON to pull 'The Lamley Group' feed without CORS issues
-                const rssUrl = encodeURIComponent('https://lamleygroup.com/feed/');
-                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+                // Fetching YouTube RSS via RSS2JSON (Lamley Group channel ID)
+                const channelId = 'UC0l5D2rCbs26o1FUXM-Vd3w'; 
+                const rssUrl = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+                
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error("Network response was not ok");
                 const data = await res.json();
                 
                 loading.classList.add('hidden');
                 
-                if (data && data.items && data.items.length > 0) {
-                    data.items.slice(0, 10).forEach(item => {
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    const items = data.items.slice(0, 10); // Get latest 10 videos
+                    
+                    items.forEach(item => {
+                        const title = item.title || "Classified Video Intel";
+                        const link = item.link || "#";
+                        const pubDateRaw = item.pubDate;
+                        const pubDate = pubDateRaw ? new Date(pubDateRaw).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Recent';
+                        const author = item.author || 'YouTube Channel';
                         
-                        // Try to find a thumbnail, fallback to a watermark if missing
-                        let imgSrc = item.thumbnail;
-                        if (!imgSrc && item.content.includes('<img')) {
-                            const match = item.content.match(/src="([^"]+)"/);
-                            if (match) imgSrc = match[1];
-                        }
+                        // Extract high-res thumbnail if available, otherwise fallback
+                        let imgSrc = item.thumbnail.replace('hqdefault.jpg', 'maxresdefault.jpg'); 
 
-                        const pubDate = new Date(item.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                        
                         const card = document.createElement('div');
-                        card.className = "glass-card relative rounded-xl overflow-hidden shadow-lg border-cyan-500/20 mb-4 transition-all hover:border-cyan-500/50";
-                        
-                        const imgHTML = imgSrc 
-                            ? `<img src="${imgSrc}" class="w-full h-48 object-cover opacity-80 border-b border-slate-800">` 
-                            : `<div class="w-full h-32 bg-slate-900 flex items-center justify-center border-b border-slate-800"><i class="fas fa-newspaper text-4xl text-slate-700"></i></div>`;
+                        card.className = "glass-card relative rounded-xl overflow-hidden shadow-lg border-cyan-500/20 mb-4 transition-all hover:border-cyan-500/50 bg-black";
                         
                         card.innerHTML = `
-                            ${imgHTML}
+                            <div class="relative cursor-pointer" onclick="window.open('${link}', '_blank')">
+                                <img src="${imgSrc}" class="w-full h-48 sm:h-56 object-cover opacity-80 border-b border-slate-800 transition-opacity hover:opacity-100" onerror="this.src='${item.thumbnail}'">
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform hover:scale-110">
+                                    <i class="fab fa-youtube text-5xl text-red-600 drop-shadow-[0_0_15px_rgba(0,0,0,0.8)] opacity-90"></i>
+                                </div>
+                            </div>
                             <div class="p-4">
                                 <div class="flex justify-between items-center mb-2">
-                                    <span class="text-cyan-400 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rss mr-1"></i> Lamley Group</span>
+                                    <span class="text-cyan-400 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-video mr-1"></i> ${author}</span>
                                     <span class="text-slate-400 text-[10px] font-mono-price">${pubDate}</span>
                                 </div>
-                                <h3 class="text-white font-bold text-base leading-snug mb-3">${item.title}</h3>
-                                <a href="${item.link}" target="_blank" class="w-full block text-center text-slate-200 hover:text-white bg-slate-800/80 hover:bg-cyan-900/60 border border-slate-600 hover:border-cyan-500/50 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
-                                    Read Full Intel <i class="fas fa-external-link-alt ml-1"></i>
+                                <h3 class="text-white font-bold text-sm leading-snug mb-3">${title}</h3>
+                                <a href="${link}" target="_blank" class="w-full flex items-center justify-center text-slate-200 hover:text-white bg-red-900/60 hover:bg-red-800/80 border border-red-700/50 hover:border-red-500/50 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+                                    Watch Video
                                 </a>
                             </div>
                         `;
@@ -493,13 +486,12 @@
                     });
                     container.dataset.loaded = 'true';
                 } else {
-                    loading.innerHTML = "No global intel found.";
-                    loading.classList.remove('hidden');
+                    throw new Error("Empty feed data");
                 }
             } catch(e) {
-                loading.innerHTML = "Failed to intercept news feed.";
+                loading.innerHTML = '<div class="text-cyan-400 font-bold mb-2 text-center"><i class="fas fa-exclamation-triangle"></i> Signal Lost</div><p class="text-xs text-center">Failed to intercept video feed. Comm block detected.</p>';
                 loading.classList.remove('hidden');
-                console.error("RSS Error:", e);
+                console.error("YouTube RSS Error:", e);
             }
         }
 
@@ -677,7 +669,7 @@
             // Reset all classes
             const inactiveClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
             const activeClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
-            const activeNewsClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-cyan-600 text-white shadow-[0_0_10px_rgba(8,145,178,0.3)] transition-all"; // Custom cyan color for news
+            const activeNewsClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-cyan-900 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(8,145,178,0.3)] transition-all"; 
 
             feedBtn.className = inactiveClass;
             mapBtn.className = inactiveClass;
@@ -702,7 +694,7 @@
                 newsBtn.className = activeNewsClass;
                 filterSec.classList.add('hidden');
                 newsContainer.classList.remove('hidden');
-                fetchDiecastNews(); // Triggers the RSS fetch
+                fetchDiecastNews(); 
             }
         };
 
@@ -929,7 +921,6 @@
             const ebaySearchTerm = encodeURIComponent((post.car || 'diecast') + ' uk');
             const ebayLink = `https://www.ebay.co.uk/sch/i.html?_nkw=${ebaySearchTerm}`;
 
-            // Add background watermark if no image is provided to make the card look less empty
             const watermarkIcon = post.image ? '' : '<i class="fas fa-car-side absolute -bottom-6 -right-6 text-8xl text-slate-800/20 -rotate-12 pointer-events-none"></i>';
 
             const div = document.createElement('div');
