@@ -193,11 +193,32 @@
 
         <!-- Content Area -->
         <div class="relative flex-grow min-h-[500px]">
+            
             <!-- Feed View -->
-            <div id="feed-container" class="space-y-4 pb-10">
-                <div id="loading-spinner" class="text-center py-16">
-                    <div class="w-16 h-16 mx-auto border-4 border-slate-800 border-t-green-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,197,94,0.3)]"></div>
-                    <p class="text-slate-400 font-oswald tracking-widest text-sm uppercase">Syncing global radar...</p>
+            <div id="feed-wrapper">
+                <!-- Whatnot Referral Banner -->
+                <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="block w-full bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl p-3 sm:p-4 mb-5 shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-transform hover:scale-[1.02] border border-yellow-300/50 group">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="bg-black/20 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-gift text-yellow-50 text-xl sm:text-2xl drop-shadow-md group-hover:animate-bounce"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-black font-extrabold font-oswald tracking-wide text-sm sm:text-base leading-tight drop-shadow-sm">CLAIM £10 FREE WHATNOT CREDIT</h4>
+                                <p class="text-yellow-950 text-[10px] sm:text-xs font-bold mt-0.5 leading-snug">Sign up via this link & use it on live diecast streams today!</p>
+                            </div>
+                        </div>
+                        <div class="bg-black/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-chevron-right text-yellow-950"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <div id="feed-container" class="space-y-4 pb-10">
+                    <div id="loading-spinner" class="text-center py-16">
+                        <div class="w-16 h-16 mx-auto border-4 border-slate-800 border-t-green-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,197,94,0.3)]"></div>
+                        <p class="text-slate-400 font-oswald tracking-widest text-sm uppercase">Syncing global radar...</p>
+                    </div>
                 </div>
             </div>
 
@@ -683,7 +704,7 @@
             const mapBtn = document.getElementById('tab-map');
             const newsBtn = document.getElementById('tab-news');
             
-            const feedContainer = document.getElementById('feed-container');
+            const feedWrapper = document.getElementById('feed-wrapper');
             const mapContainer = document.getElementById('map-container');
             const newsContainer = document.getElementById('news-container');
             
@@ -698,13 +719,13 @@
             mapBtn.className = inactiveClass;
             newsBtn.className = inactiveClass;
             
-            feedContainer.classList.add('hidden');
+            feedWrapper.classList.add('hidden');
             mapContainer.classList.add('hidden');
             newsContainer.classList.add('hidden');
 
             if (tab === 'feed') {
                 feedBtn.className = activeClass;
-                feedContainer.classList.remove('hidden');
+                feedWrapper.classList.remove('hidden');
                 filterSec.classList.remove('hidden');
             } else if (tab === 'map') {
                 mapBtn.className = activeClass;
