@@ -403,7 +403,7 @@
         };
         // ==========================================
 
-        const GEMINI_API_KEY = "AQ.Ab8RN6JU_AICHcxYG11BckIyMqYluSIZfedOlyb8ha-CwnHi9A"; // Your Gemini AI Key
+        const GEMINI_API_KEY = "AQ.Ab8RN6KTxrqigIot9Zq5XN3ux-k3MjFV7wwKrTuPUtXT1V3uww"; // Your NEW Gemini AI Key
 
         let auth = null, provider = null, db = null, currentUser = null;
         let allPosts = []; 
@@ -620,7 +620,7 @@
             }
         }
 
-        // --- GEMINI AI INTEGRATION ---
+        // --- GEMINI AI INTEGRATION WITH ERROR CHECKING ---
         async function scanImageWithAI(base64Image) {
             const carInput = document.getElementById('post-car');
             carInput.value = "";
@@ -645,6 +645,14 @@
                 });
                 
                 const data = await response.json();
+                
+                // If Google rejects the API key, this catches it!
+                if (data.error) {
+                    console.error("Gemini API Error:", data.error);
+                    carInput.placeholder = `AI Error: ${data.error.message}`;
+                    return;
+                }
+
                 if (data.candidates && data.candidates.length > 0) {
                     let carName = data.candidates[0].content.parts[0].text.trim();
                     // Remove any markdown or extra fluff if AI adds it
@@ -655,7 +663,7 @@
                 }
             } catch (error) {
                 console.error("AI Scan Error:", error);
-                carInput.placeholder = "AI Scan failed. Please type.";
+                carInput.placeholder = `Connection Error: ${error.message}`;
             } finally {
                 carInput.classList.remove('border-cyan-500', 'ring-1', 'ring-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.5)]');
             }
