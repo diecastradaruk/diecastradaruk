@@ -458,45 +458,62 @@
             if (container.dataset.loaded === 'true') return; 
             
             try {
-                const rssUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
-                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+                // We now pull from TWO sources: Lamley Group & The Wheel Collector
+                const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
+                const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg'); // TheWheelCollector's ID
                 
-                const res = await fetch(apiUrl);
-                const data = await res.json();
+                // Fetch both feeds at the exact same time
+                const [lamleyRes, twcRes] = await Promise.all([
+                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
+                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`)
+                ]);
+                
+                const lamleyData = await lamleyRes.json();
+                const twcData = await twcRes.json();
                 
                 let videos = [];
                 
-                if (data && data.items && data.items.length > 0) {
-                    videos = data.items.slice(0, 10);
-                } else {
+                // Combine both lists if they successfully loaded
+                if (lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items);
+                if (twcData && twcData.items) videos = videos.concat(twcData.items);
+                
+                if (videos.length === 0) {
                     throw new Error("API returned empty data");
                 }
+                
+                // Sort the mixed list by Newest Publish Date
+                videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
+                
+                // Keep only the 10 most recent videos across both channels
+                videos = videos.slice(0, 10);
                 
                 renderVideos(videos);
 
             } catch(e) {
                 console.warn("Live fetch failed, deploying failsafe cache...", e);
+                
+                // Updated Failsafe Cache featuring The Wheel Collector's UK Hunts
                 const failsafeVideos = [
+                    {
+                        title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot",
+                        link: "https://www.youtube.com/watch?v=l5zchpdju5w",
+                        pubDate: new Date().toISOString(),
+                        author: "The Wheel Collector",
+                        thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg"
+                    },
                     {
                         title: "Hot Wheels 2027 A Case Unboxing: New Ferrari & Boneshaker",
                         link: "https://www.youtube.com/watch?v=4ECWszkiJ5E",
-                        pubDate: new Date().toISOString(),
+                        pubDate: new Date(Date.now() - 40000000).toISOString(),
                         author: "Lamley Group",
                         thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg"
                     },
                     {
-                        title: "Hot Wheels RLC 2027 Designer Preview: Ferrari, Viper, & a Civic Chase",
-                        link: "https://www.youtube.com/watch?v=mbupt5utKvQ",
+                        title: "Hunting RARE HOT WHEELS UK Retail Park 🔥 4 Store Hunt",
+                        link: "https://www.youtube.com/watch?v=F_8Q83-ERD0",
                         pubDate: new Date(Date.now() - 86400000).toISOString(),
-                        author: "Lamley Group",
-                        thumbnail: "https://i.ytimg.com/vi/mbupt5utKvQ/maxresdefault.jpg"
-                    },
-                    {
-                        title: "Unboxing Hot Wheels 2026 - E Case!",
-                        link: "https://www.youtube.com/watch?v=ThrMbLA5arM",
-                        pubDate: new Date(Date.now() - 172800000).toISOString(),
-                        author: "Ministry of Diecast",
-                        thumbnail: "https://i.ytimg.com/vi/ThrMbLA5arM/maxresdefault.jpg"
+                        author: "The Wheel Collector",
+                        thumbnail: "https://i.ytimg.com/vi/F_8Q83-ERD0/maxresdefault.jpg"
                     }
                 ];
                 renderVideos(failsafeVideos);
