@@ -173,13 +173,16 @@
             <div class="text-xs text-slate-400 font-mono-price" id="active-posts-count">Scanning UK Stores...</div>
         </div>
 
-        <!-- View Toggle -->
+        <!-- Three-Way View Toggle -->
         <div class="flex bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl mb-5 border border-slate-700 shadow-lg">
-            <button onclick="switchTab('feed')" id="tab-feed" class="flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
-                <i class="fas fa-list-ul mr-2"></i> Intel Feed
+            <button onclick="switchTab('feed')" id="tab-feed" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
+                <i class="fas fa-list-ul sm:mr-1.5"></i> <span class="hidden sm:inline">Feed</span>
             </button>
-            <button onclick="switchTab('map')" id="tab-map" class="flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
-                <i class="fas fa-map-marked-alt mr-2"></i> Radar Map
+            <button onclick="switchTab('map')" id="tab-map" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
+                <i class="fas fa-map-marked-alt sm:mr-1.5"></i> <span class="hidden sm:inline">Map</span>
+            </button>
+            <button onclick="switchTab('news')" id="tab-news" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
+                <i class="fas fa-globe sm:mr-1.5"></i> <span class="hidden sm:inline">News</span>
             </button>
         </div>
 
@@ -217,6 +220,24 @@
                 <div class="absolute top-4 right-4 z-[400] bg-black/80 backdrop-blur-md p-3 rounded-lg border border-slate-700 shadow-lg pointer-events-none text-xs text-slate-300">
                     <div class="flex items-center mb-1"><span class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] mr-2"></span> Fresh Intel</div>
                     <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444] mr-2"></span> Raided (Empty)</div>
+                </div>
+            </div>
+
+            <!-- Global News View -->
+            <div id="news-container" class="hidden pb-10 space-y-5" data-loaded="false">
+                <div class="bg-cyan-900/20 border border-cyan-500/30 rounded-xl p-4 mb-2 flex items-center shadow-lg">
+                    <i class="fas fa-satellite text-2xl text-cyan-400 mr-4"></i>
+                    <div>
+                        <h4 class="text-cyan-400 font-bold font-oswald tracking-wide">GLOBAL INTEL NETWORK</h4>
+                        <p class="text-xs text-slate-400">Intercepting latest diecast news, sneak peeks, and release articles from top worldwide blogs.</p>
+                    </div>
+                </div>
+                <div id="news-loading" class="text-center py-12">
+                    <div class="w-12 h-12 mx-auto border-4 border-slate-800 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
+                    <p class="text-slate-400 font-oswald tracking-widest text-xs uppercase">Intercepting global transmissions...</p>
+                </div>
+                <div id="news-feed-list" class="space-y-4">
+                    <!-- News cards injected here -->
                 </div>
             </div>
         </div>
@@ -371,7 +392,7 @@
         // PASTE YOUR FIREBASE KEYS HERE
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
+             apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
   authDomain: "diecast-radar-5c38d.firebaseapp.com",
   projectId: "diecast-radar-5c38d",
   storageBucket: "diecast-radar-5c38d.firebasestorage.app",
@@ -384,7 +405,7 @@
         let auth = null, provider = null, db = null, currentUser = null;
         let allPosts = []; 
         let map = null, mapMarkers = [];
-        let userAlertKeywords = []; // Array of tracking strings
+        let userAlertKeywords = []; 
         const safeAppId = typeof __app_id !== 'undefined' ? __app_id : 'diecastradar-v2';
         const appLoadTime = Date.now(); 
         
@@ -397,7 +418,6 @@
             console.error("Firebase init error. Did you paste your keys?", e);
         }
 
-        // --- Quick Filters Setup ---
         window.setSearch = (term) => {
             const searchInput = document.getElementById('filter-search');
             searchInput.value = term;
@@ -421,7 +441,68 @@
             if (confirmActionCallback) confirmActionCallback();
         });
         
-        // Notification & Alert Logic
+        // --- Global News Feed Fetcher ---
+        async function fetchDiecastNews() {
+            const container = document.getElementById('news-container');
+            const list = document.getElementById('news-feed-list');
+            const loading = document.getElementById('news-loading');
+            
+            if (container.dataset.loaded === 'true') return; // Don't fetch twice in one session
+            
+            try {
+                // Using RSS2JSON to pull 'The Lamley Group' feed without CORS issues
+                const rssUrl = encodeURIComponent('https://lamleygroup.com/feed/');
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+                const data = await res.json();
+                
+                loading.classList.add('hidden');
+                
+                if (data && data.items && data.items.length > 0) {
+                    data.items.slice(0, 10).forEach(item => {
+                        
+                        // Try to find a thumbnail, fallback to a watermark if missing
+                        let imgSrc = item.thumbnail;
+                        if (!imgSrc && item.content.includes('<img')) {
+                            const match = item.content.match(/src="([^"]+)"/);
+                            if (match) imgSrc = match[1];
+                        }
+
+                        const pubDate = new Date(item.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                        
+                        const card = document.createElement('div');
+                        card.className = "glass-card relative rounded-xl overflow-hidden shadow-lg border-cyan-500/20 mb-4 transition-all hover:border-cyan-500/50";
+                        
+                        const imgHTML = imgSrc 
+                            ? `<img src="${imgSrc}" class="w-full h-48 object-cover opacity-80 border-b border-slate-800">` 
+                            : `<div class="w-full h-32 bg-slate-900 flex items-center justify-center border-b border-slate-800"><i class="fas fa-newspaper text-4xl text-slate-700"></i></div>`;
+                        
+                        card.innerHTML = `
+                            ${imgHTML}
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-cyan-400 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rss mr-1"></i> Lamley Group</span>
+                                    <span class="text-slate-400 text-[10px] font-mono-price">${pubDate}</span>
+                                </div>
+                                <h3 class="text-white font-bold text-base leading-snug mb-3">${item.title}</h3>
+                                <a href="${item.link}" target="_blank" class="w-full block text-center text-slate-200 hover:text-white bg-slate-800/80 hover:bg-cyan-900/60 border border-slate-600 hover:border-cyan-500/50 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+                                    Read Full Intel <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                        `;
+                        list.appendChild(card);
+                    });
+                    container.dataset.loaded = 'true';
+                } else {
+                    loading.innerHTML = "No global intel found.";
+                    loading.classList.remove('hidden');
+                }
+            } catch(e) {
+                loading.innerHTML = "Failed to intercept news feed.";
+                loading.classList.remove('hidden');
+                console.error("RSS Error:", e);
+            }
+        }
+
         document.getElementById('alerts-btn').addEventListener('click', () => {
             renderAlertsList();
             checkNotificationStatus();
@@ -514,7 +595,6 @@
         };
 
         function checkForAlertMatch(postData) {
-            // Check if post is newer than app load time, and user didn't make the post
             if(postData.timestamp < appLoadTime || (currentUser && postData.userId === currentUser.uid)) return;
             
             const postString = `${postData.car || ''} ${postData.store} ${postData.location}`.toLowerCase();
@@ -586,25 +666,43 @@
         window.switchTab = (tab) => {
             const feedBtn = document.getElementById('tab-feed');
             const mapBtn = document.getElementById('tab-map');
+            const newsBtn = document.getElementById('tab-news');
+            
             const feedContainer = document.getElementById('feed-container');
             const mapContainer = document.getElementById('map-container');
+            const newsContainer = document.getElementById('news-container');
+            
             const filterSec = document.getElementById('filters-section');
 
+            // Reset all classes
+            const inactiveClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
+            const activeClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
+            const activeNewsClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-cyan-600 text-white shadow-[0_0_10px_rgba(8,145,178,0.3)] transition-all"; // Custom cyan color for news
+
+            feedBtn.className = inactiveClass;
+            mapBtn.className = inactiveClass;
+            newsBtn.className = inactiveClass;
+            
+            feedContainer.classList.add('hidden');
+            mapContainer.classList.add('hidden');
+            newsContainer.classList.add('hidden');
+
             if (tab === 'feed') {
-                feedBtn.className = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
-                mapBtn.className = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
+                feedBtn.className = activeClass;
                 feedContainer.classList.remove('hidden');
                 filterSec.classList.remove('hidden');
-                mapContainer.classList.add('hidden');
-            } else {
-                mapBtn.className = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
-                feedBtn.className = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
-                feedContainer.classList.add('hidden');
+            } else if (tab === 'map') {
+                mapBtn.className = activeClass;
                 filterSec.classList.add('hidden');
                 mapContainer.classList.remove('hidden');
                 initMap();
                 setTimeout(() => map.invalidateSize(), 100);
                 updateMapMarkers();
+            } else if (tab === 'news') {
+                newsBtn.className = activeNewsClass;
+                filterSec.classList.add('hidden');
+                newsContainer.classList.remove('hidden');
+                fetchDiecastNews(); // Triggers the RSS fetch
             }
         };
 
