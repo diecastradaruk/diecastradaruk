@@ -403,12 +403,18 @@
         };
         // ==========================================
 
-        const GEMINI_API_KEY = "AQ.Ab8RN6I87z4evgGw9oQNZxaAuGe4msQ2LuPdDUae1SOSSbl5MQ"; // Embedded Exact Key
+        const GEMINI_API_KEY = "AQ.Ab8RN6I87z4evgGw9oQNZxaAuGe4msQ2LuPdDUae1SOSSbl5MQ"; 
 
         let auth = null, provider = null, db = null, currentUser = null;
         let allPosts = []; 
         let map = null, mapMarkers = [];
         let userAlertKeywords = []; 
+        
+        // --- NEW VARIABLES FOR HUNTING STREAK ---
+        let userStreakCount = 0;
+        let userLastPostDate = null;
+        // ----------------------------------------
+        
         const safeAppId = typeof __app_id !== 'undefined' ? __app_id : 'diecastradar-v2';
         const appLoadTime = Date.now(); 
         
@@ -448,25 +454,21 @@
             const container = document.getElementById('news-container');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
-            
             if (container.dataset.loaded === 'true') return; 
             
             try {
                 const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
                 const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg');
-                
                 const [lamleyRes, twcRes] = await Promise.all([
                     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
                     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`)
                 ]);
-                
                 const lamleyData = await lamleyRes.json();
                 const twcData = await twcRes.json();
                 
                 let videos = [];
                 if (lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items);
                 if (twcData && twcData.items) videos = videos.concat(twcData.items);
-                
                 if (videos.length === 0) throw new Error("API returned empty data");
                 
                 videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
@@ -542,14 +544,20 @@
             }
         }
 
-        async function loadUserAlerts() {
+        // --- UPDATED USER DATA LOAD (ALERTS + STREAK) ---
+        async function loadUserData() {
             if(!currentUser || !db) return;
             try {
                 const userDoc = await getDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid));
-                if (userDoc.exists() && userDoc.data().alerts) {
-                    userAlertKeywords = userDoc.data().alerts;
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    if (data.alerts) userAlertKeywords = data.alerts;
+                    if (data.streakCount) userStreakCount = data.streakCount;
+                    if (data.lastPostDate) userLastPostDate = data.lastPostDate;
                 } else {
                     userAlertKeywords = [];
+                    userStreakCount = 0;
+                    userLastPostDate = null;
                 }
                 updateAlertIndicator();
             } catch(e) {}
@@ -560,7 +568,7 @@
             try {
                 await setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid), {
                     alerts: userAlertKeywords
-                }, { merge: true });
+                }, { merge: true }); // Merge ensures we don't accidentally overwrite the streak data!
                 updateAlertIndicator();
             } catch(e) {}
         }
@@ -620,45 +628,26 @@
             }
         }
 
-        // --- GEMINI AI INTEGRATION WITH ERROR CHECKING ---
         async function scanImageWithAI(base64Image) {
             const carInput = document.getElementById('post-car');
             carInput.value = "";
             carInput.placeholder = "🤖 AI SCANNING IMAGE...";
             carInput.classList.add('border-cyan-500', 'ring-1', 'ring-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.5)]');
-
             try {
-                // Remove data:image/jpeg;base64, prefix for Gemini
                 const base64Data = base64Image.split(',')[1];
-                
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': GEMINI_API_KEY // Backup header for AQ. keys
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: "Identify the make and model of the diecast car in this image. Respond ONLY with the car name (e.g. 'Nissan Skyline GT-R' or 'Hot Wheels Boulevard Set'). Be extremely concise." },
-                                { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-                            ]
-                        }]
-                    })
+                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Identify the make and model of the diecast car in this image. Respond ONLY with the car name (e.g. 'Nissan Skyline GT-R' or 'Hot Wheels Boulevard Set'). Be extremely concise." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }] })
                 });
-                
                 const data = await response.json();
-                
-                // If Google rejects the API key, this catches it!
                 if (data.error) {
                     console.error("Gemini API Error:", data.error);
                     carInput.placeholder = `AI Error: ${data.error.message}`;
                     return;
                 }
-
                 if (data.candidates && data.candidates.length > 0) {
                     let carName = data.candidates[0].content.parts[0].text.trim();
-                    // Remove any markdown or extra fluff if AI adds it
                     carName = carName.replace(/\n/g, ' ').replace(/\*/g, '');
                     carInput.value = carName;
                 } else {
@@ -693,11 +682,7 @@
                     document.getElementById('image-preview').src = currentCompressedImageBase64;
                     document.getElementById('image-preview').classList.remove('hidden');
                     document.getElementById('image-remove-btn').classList.remove('hidden');
-
-                    // Call the AI Scanner!
-                    if (GEMINI_API_KEY) {
-                        scanImageWithAI(currentCompressedImageBase64);
-                    }
+                    if (GEMINI_API_KEY) scanImageWithAI(currentCompressedImageBase64);
                 };
             };
         };
@@ -734,7 +719,6 @@
             const mapContainer = document.getElementById('map-container');
             const newsContainer = document.getElementById('news-container');
             const filterSec = document.getElementById('filters-section');
-
             const inactiveClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
             const activeClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
             const activeNewsClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-cyan-900 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(8,145,178,0.3)] transition-all"; 
@@ -742,15 +726,9 @@
             feedBtn.className = inactiveClass; mapBtn.className = inactiveClass; newsBtn.className = inactiveClass;
             feedWrapper.classList.add('hidden'); mapContainer.classList.add('hidden'); newsContainer.classList.add('hidden');
 
-            if (tab === 'feed') {
-                feedBtn.className = activeClass; feedWrapper.classList.remove('hidden'); filterSec.classList.remove('hidden');
-            } else if (tab === 'map') {
-                mapBtn.className = activeClass; filterSec.classList.add('hidden'); mapContainer.classList.remove('hidden');
-                initMap(); setTimeout(() => map.invalidateSize(), 100); updateMapMarkers();
-            } else if (tab === 'news') {
-                newsBtn.className = activeNewsClass; filterSec.classList.add('hidden'); newsContainer.classList.remove('hidden');
-                fetchDiecastNews(); 
-            }
+            if (tab === 'feed') { feedBtn.className = activeClass; feedWrapper.classList.remove('hidden'); filterSec.classList.remove('hidden'); } 
+            else if (tab === 'map') { mapBtn.className = activeClass; filterSec.classList.add('hidden'); mapContainer.classList.remove('hidden'); initMap(); setTimeout(() => map.invalidateSize(), 100); updateMapMarkers(); } 
+            else if (tab === 'news') { newsBtn.className = activeNewsClass; filterSec.classList.add('hidden'); newsContainer.classList.remove('hidden'); fetchDiecastNews(); }
         };
 
         onAuthStateChanged(auth, (user) => {
@@ -760,9 +738,11 @@
             const alertsBtn = document.getElementById('alerts-btn');
             if (user) {
                 currentUser = user; authText.textContent = user.displayName.split(' ')[0]; authIcon.classList.add('hidden');
-                userAvatar.src = user.photoURL; userAvatar.classList.remove('hidden'); alertsBtn.classList.remove('hidden'); loadUserAlerts();
+                userAvatar.src = user.photoURL; userAvatar.classList.remove('hidden'); alertsBtn.classList.remove('hidden'); 
+                loadUserData(); // Load alerts AND streak data
             } else {
-                currentUser = null; userAlertKeywords = []; authText.textContent = "Sign In"; authIcon.classList.remove('hidden');
+                currentUser = null; userAlertKeywords = []; userStreakCount = 0; userLastPostDate = null;
+                authText.textContent = "Sign In"; authIcon.classList.remove('hidden');
                 userAvatar.classList.add('hidden'); alertsBtn.classList.add('hidden');
             }
             renderFeed();
@@ -770,9 +750,7 @@
 
         document.getElementById('auth-btn').addEventListener('click', async () => {
             if (currentUser) {
-                showConfirm("Sign Out", "Are you sure you want to disconnect?", async () => {
-                    await signOut(auth); showNotification("Disconnected from Radar.");
-                });
+                showConfirm("Sign Out", "Are you sure you want to disconnect?", async () => { await signOut(auth); showNotification("Disconnected from Radar."); });
             } else {
                 try { await signInWithPopup(auth, provider); } catch (error) { showNotification("Connection failed. Try again."); }
             }
@@ -781,9 +759,7 @@
         if(db) {
             const postsColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'posts');
             onSnapshot(postsColRef, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") checkForAlertMatch(change.doc.data());
-                });
+                snapshot.docChanges().forEach((change) => { if (change.type === "added") checkForAlertMatch(change.doc.data()); });
                 allPosts = [];
                 snapshot.docs.forEach((doc) => { allPosts.push({ id: doc.id, ...doc.data() }); });
                 allPosts.sort((a, b) => b.timestamp - a.timestamp);
@@ -813,14 +789,48 @@
             const location = document.getElementById('post-location').value.trim();
             const coords = await getCoordinates(location);
 
+            // --- HUNTING STREAK LOGIC ---
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('en-GB'); // Standardize as Day/Month/Year
+            
+            let newStreak = userStreakCount;
+            
+            // Check if they already posted today. If not, evaluate streak.
+            if (userLastPostDate !== todayStr) {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toLocaleDateString('en-GB');
+                
+                // If they posted yesterday, increase streak. If not, reset to 1.
+                if (userLastPostDate === yesterdayStr) {
+                    newStreak += 1;
+                } else {
+                    newStreak = 1;
+                }
+            }
+            
+            // Update local variables
+            userStreakCount = newStreak;
+            userLastPostDate = todayStr;
+            
             try {
+                // 1. Save the new streak to the User's master profile
+                await setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid), {
+                    streakCount: userStreakCount,
+                    lastPostDate: userLastPostDate
+                }, { merge: true });
+
+                // 2. Attach the streak number to this specific Post
                 await addDoc(collection(db, 'artifacts', safeAppId, 'public', 'data', 'posts'), {
                     userId: currentUser.uid, userName: currentUser.displayName, userPhoto: currentUser.photoURL,
+                    userStreak: userStreakCount, // <-- Streak saved here
                     store: finalStoreName, location: location, coordinates: coords, 
                     car: document.getElementById('post-car').value.trim(), desc: document.getElementById('post-desc').value.trim(),
                     image: currentCompressedImageBase64, timestamp: Date.now(), emptyVotes: 0, comments: [] 
                 });
-                showNotification("Intel Broadcasted Successfully!"); closeModal('post-modal');
+                
+                showNotification("Intel Broadcasted Successfully!"); 
+                closeModal('post-modal');
             } catch (error) {
                 showNotification("Error broadcasting intel.");
             } finally {
@@ -828,10 +838,7 @@
             }
         });
 
-        document.getElementById('leaderboard-btn').addEventListener('click', () => {
-            renderLeaderboard();
-            document.getElementById('leaderboard-modal').classList.remove('hidden');
-        });
+        document.getElementById('leaderboard-btn').addEventListener('click', () => { renderLeaderboard(); document.getElementById('leaderboard-modal').classList.remove('hidden'); });
 
         function renderLeaderboard() {
             const container = document.getElementById('leaderboard-container');
@@ -845,16 +852,12 @@
                 userCounts[p.userId].count++;
             });
             const sortedUsers = Object.values(userCounts).sort((a, b) => b.count - a.count);
-            if (sortedUsers.length === 0) {
-                container.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No intel transmitted this week yet.<br>Be the first to hit the radar!</div>';
-                return;
-            }
+            if (sortedUsers.length === 0) { container.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No intel transmitted this week yet.<br>Be the first to hit the radar!</div>'; return; }
             sortedUsers.forEach((user, index) => {
                 let rankIcon = `<span class="text-slate-500 font-bold text-lg w-8 text-center">${index + 1}</span>`;
                 if (index === 0) rankIcon = `<i class="fas fa-medal text-yellow-400 text-2xl drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] w-8 text-center"></i>`;
                 if (index === 1) rankIcon = `<i class="fas fa-medal text-slate-300 text-xl drop-shadow-[0_0_8px_rgba(203,213,225,0.6)] w-8 text-center"></i>`;
                 if (index === 2) rankIcon = `<i class="fas fa-medal text-amber-600 text-xl drop-shadow-[0_0_8px_rgba(217,119,6,0.6)] w-8 text-center"></i>`;
-
                 const div = document.createElement('div');
                 div.className = `flex items-center justify-between p-4 border-b border-slate-800/50 ${index === 0 ? 'bg-yellow-900/10' : ''}`;
                 div.innerHTML = `
@@ -930,6 +933,11 @@
             const watermarkIcon = post.image ? '' : '<i class="fas fa-car-side absolute -bottom-6 -right-6 text-8xl text-slate-800/20 -rotate-12 pointer-events-none"></i>';
             const isOwner = currentUser && post.userId === currentUser.uid;
 
+            // --- RENDER THE STREAK BADGE ---
+            const streakBadge = (post.userStreak && post.userStreak >= 2) 
+                ? `<span class="text-orange-500 font-bold ml-2 text-xs bg-orange-950/40 px-1.5 py-0.5 rounded border border-orange-900/50" title="${post.userStreak} Day Streak!"><i class="fas fa-fire animate-pulse"></i> ${post.userStreak}</span>` 
+                : '';
+
             const div = document.createElement('div');
             div.className = `glass-card relative rounded-xl overflow-hidden shadow-lg p-5 mb-5 ${freshnessClass}`;
             div.innerHTML = `
@@ -939,7 +947,7 @@
                     <div class="flex items-center gap-3">
                         <img src="${post.userPhoto || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-green-500/50 shadow-md object-cover">
                         <div>
-                            <div class="font-bold text-slate-100 text-sm">${post.userName || 'Collector'}</div>
+                            <div class="font-bold text-slate-100 text-sm flex items-center">${post.userName || 'Collector'} ${streakBadge}</div>
                             <div class="text-green-400 font-mono-price text-[10px] uppercase flex items-center"><i class="fas fa-satellite-dish mr-1 text-[9px] animate-pulse"></i> ${timeString}</div>
                         </div>
                     </div>
@@ -961,9 +969,7 @@
             return div;
         }
 
-        document.getElementById('filter-search').addEventListener('input', () => {
-            renderFeed(); if(!document.getElementById('map-container').classList.contains('hidden')) updateMapMarkers();
-        });
+        document.getElementById('filter-search').addEventListener('input', () => { renderFeed(); if(!document.getElementById('map-container').classList.contains('hidden')) updateMapMarkers(); });
 
         function updateMapMarkers() {
             if(!map) return;
@@ -986,9 +992,7 @@
             if(hasFreshMarkers) map.fitBounds(bounds, {padding: [50, 50], maxZoom: 12});
         }
         
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => { console.log('SW setup failed:', err); }); });
-        }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => { console.log('SW setup failed:', err); }); }); }
     </script>
 </body>
 </html>
