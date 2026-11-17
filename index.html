@@ -143,6 +143,18 @@
 
         <!-- VIEW: FEED -->
         <div id="view-feed" class="block">
+            
+            <!-- Daily Diecast Intel (Fun Fact) -->
+            <div class="bg-radar-panel border border-slate-800 rounded-xl p-3 mb-5 flex items-start gap-3 shadow-md">
+                <div class="bg-radar-primary/10 p-2 rounded-lg text-radar-primary mt-0.5">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <div>
+                    <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-1">Daily Intel</h4>
+                    <p id="daily-fact-text" class="text-slate-400 text-xs leading-relaxed italic">Loading intel...</p>
+                </div>
+            </div>
+
             <!-- Search & Filters -->
             <div class="bg-radar-panel rounded-xl border border-slate-800 p-4 mb-5">
                 <input type="text" placeholder="Search town, store, or car..." class="w-full bg-[#050b14] border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary mb-3">
@@ -295,6 +307,28 @@
 
         // Map Variables
         let liveMap = null;
+
+        // --- Daily Fact Logic ---
+        const diecastFacts = [
+            "Hot Wheels were introduced by Mattel in 1968 with the original 'Sweet 16' models.",
+            "The most expensive Hot Wheels ever sold is the 1969 Pink Rear-Loading Volkswagen Beach Bomb, valued over $150,000.",
+            "Matchbox cars got their name because the original toys were designed to fit inside a matchbox so children could take them to school.",
+            "Over 6 billion Hot Wheels have been produced since 1968. There are more Hot Wheels than real cars in the world!",
+            "Super Treasure Hunts (STH) were introduced in 2007, featuring Spectraflame paint and Real Riders (rubber tires).",
+            "The iconic Hot Wheels orange track was chosen because children gravitated towards the bright, exciting color during early testing.",
+            "Larry Wood, one of the most famous Hot Wheels designers, worked at Mattel for 40 years and is known as 'Mr. Hot Wheels'.",
+            "The 1967 Custom Camaro was the very first Hot Wheels car ever released to the public.",
+            "Treasure Hunts were first introduced by Hot Wheels in 1995 with a limited production run of 10,000 pieces per vehicle.",
+            "Lesney Products, the original maker of Matchbox, started out making industrial diecast parts before switching to toys."
+        ];
+
+        function loadDailyFact() {
+            // Get the current day of the year to rotate the fact daily
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+            const factIndex = dayOfYear % diecastFacts.length;
+            document.getElementById('daily-fact-text').textContent = `"${diecastFacts[factIndex]}"`;
+        }
 
         // UI Helpers
         window.showToast = (message, type = 'success') => {
@@ -651,6 +685,7 @@
         // --- Init ---
         window.onload = () => {
             fetchDiecastNews();
+            loadDailyFact(); // Load the fun fact of the day on startup!
             
             if (isFirebaseConfigured) {
                 const app = initializeApp(firebaseConfig);
