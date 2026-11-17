@@ -6,15 +6,18 @@
     <title>Diecast Radar UK</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --bg-color: #0f172a;
             --panel-bg: #1e293b;
             --primary: #10b981;
             --primary-glow: rgba(16, 185, 129, 0.4);
-            --bounty-red: #ef4444;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --error: #ef4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -22,7 +25,8 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            padding-bottom: 80px;
+            padding-bottom: 90px;
+            overflow-x: hidden;
         }
 
         /* Header & Navigation */
@@ -41,10 +45,7 @@
 
         .logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
         
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .header-buttons { display: flex; gap: 10px; }
 
         .btn-small {
             background: rgba(255, 255, 255, 0.1);
@@ -55,37 +56,45 @@
             font-size: 0.8rem;
             cursor: pointer;
             font-weight: bold;
+            transition: all 0.2s;
         }
+        .btn-small:hover { background: rgba(255, 255, 255, 0.2); }
 
-        /* Bounty Board */
-        .bounty-board {
-            background: linear-gradient(145deg, #2a1010, #1a0808);
-            border: 1px solid var(--bounty-red);
-            margin: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
-            position: relative;
-            overflow: hidden;
+        /* Video Feed Section */
+        .video-section {
+            padding: 15px 0 5px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
+        .video-header { font-size: 0.85rem; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .bounty-board::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: repeating-radial-gradient(circle, transparent, transparent 20px, rgba(239, 68, 68, 0.05) 21px, rgba(239, 68, 68, 0.05) 22px);
-            animation: radar 10s linear infinite;
-            pointer-events: none;
+        .video-scroller {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 15px;
+            scrollbar-width: none; /* Firefox */
         }
+        .video-scroller::-webkit-scrollbar { display: none; } /* Chrome */
+        
+        .video-card {
+            min-width: 260px;
+            max-width: 260px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        .video-card img { width: 100%; height: 140px; object-fit: cover; opacity: 0.85; border-bottom: 1px solid #1e293b; }
+        .video-card-content { padding: 12px; }
+        .video-meta { display: flex; justify-content: space-between; font-size: 0.7rem; color: #22d3ee; margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
+        .video-date { color: var(--text-muted); font-family: monospace; }
+        .video-title { font-size: 0.85rem; font-weight: bold; color: white; line-height: 1.3; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-btn { display: block; text-align: center; background: rgba(153, 27, 27, 0.6); color: #e2e8f0; border: 1px solid rgba(185, 28, 28, 0.5); padding: 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: bold; text-transform: uppercase; }
 
-        @keyframes radar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .bounty-title { color: var(--bounty-red); font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; }
-        .bounty-car { font-size: 1.2rem; font-weight: bold; color: white; }
-
-        /* Feed */
-        .feed-container { padding: 0 15px; display: flex; flex-direction: column; gap: 15px; }
+        /* Main Feed */
+        .feed-container { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
         
         .post-card {
             background: var(--panel-bg);
@@ -93,23 +102,12 @@
             padding: 15px;
             border-left: 4px solid var(--primary);
         }
-
         .post-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        
         .user-info { display: flex; flex-direction: column; gap: 2px; }
         .username-row { display: flex; align-items: center; gap: 6px; }
         .username { font-weight: bold; color: var(--primary); }
         .streak { font-size: 0.8rem; color: #f97316; background: rgba(249, 115, 22, 0.15); padding: 2px 6px; border-radius: 12px; font-weight: bold; }
-        
-        .top-iso-badge {
-            font-size: 0.75rem;
-            color: #cbd5e1;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 2px;
-        }
-        
+        .top-iso-badge { font-size: 0.75rem; color: #cbd5e1; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
         .time { font-size: 0.75rem; color: var(--text-muted); }
         .post-location { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
         .post-car { color: #e2e8f0; margin-bottom: 5px; }
@@ -136,100 +134,160 @@
             z-index: 90;
         }
 
-        /* Modals */
+        /* Modals & Overlays */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: none; justify-content: center; align-items: center;
             z-index: 200; padding: 20px;
+            backdrop-filter: blur(4px);
         }
-
         .modal {
             background: var(--panel-bg);
             width: 100%; max-width: 400px;
             border-radius: 12px;
             padding: 20px;
             border: 1px solid rgba(255,255,255,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
         }
-
-        .modal h2 { margin-bottom: 15px; color: white; font-size: 1.2rem; }
+        .modal h2 { margin-bottom: 15px; color: white; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
         
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; font-weight: bold;}
         .form-group input, .form-group select {
-            width: 100%; padding: 10px; border-radius: 6px;
+            width: 100%; padding: 12px; border-radius: 6px;
             background: #0f172a; border: 1px solid rgba(255,255,255,0.2);
             color: white; font-size: 1rem;
         }
+        .form-group input:focus { outline: none; border-color: var(--primary); }
 
-        .iso-slot-1 input { border-color: var(--primary); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
-        .iso-label-1 { color: var(--primary) !important; font-weight: bold; }
+        /* AI Scanner UI */
+        .scanner-box {
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(16, 185, 129, 0.4);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .scanner-box label { cursor: pointer; color: var(--primary); font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 8px;}
+        .scanner-box input[type="file"] { display: none; }
+        #ai-preview { max-width: 100%; border-radius: 6px; display: none; margin-top: 10px; }
+        .ai-loading { display: none; color: #22d3ee; font-size: 0.85rem; margin-top: 10px; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        .btn-submit {
-            width: 100%; background: var(--primary); color: #000;
-            border: none; padding: 12px; border-radius: 6px;
-            font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px;
+        /* Garage Highlight */
+        .iso-slot-1 input { border-color: var(--primary); box-shadow: 0 0 8px rgba(16, 185, 129, 0.15); }
+        .iso-label-1 { color: var(--primary) !important; }
+
+        .btn-submit { width: 100%; background: var(--primary); color: #000; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn-cancel { width: 100%; background: transparent; color: var(--text-muted); border: none; padding: 12px; margin-top: 5px; cursor: pointer; }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px;
+            pointer-events: none;
         }
-        
-        .btn-cancel {
-            width: 100%; background: transparent; color: var(--text-muted);
-            border: none; padding: 12px; margin-top: 5px; cursor: pointer;
+        .toast {
+            background: var(--panel-bg); border-left: 4px solid var(--primary);
+            color: white; padding: 12px 16px; border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            font-size: 0.9rem; font-weight: bold;
+            animation: slideDown 0.3s ease-out;
         }
+        .toast.error { border-left-color: var(--error); }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">📡 DIECAST RADAR UK</div>
+        <div class="logo"><i class="fas fa-satellite-dish"></i> DIECAST RADAR UK</div>
         <div class="header-buttons">
-            <button class="btn-small" onclick="openGarage()">Garage</button>
-            <button class="btn-small" onclick="setupProfile()">Profile</button>
+            <button class="btn-small" onclick="openGarage()"><i class="fas fa-warehouse"></i> Garage</button>
+            <button class="btn-small" onclick="openProfile()"><i class="fas fa-user"></i> Profile</button>
         </div>
     </header>
 
-    <div class="bounty-board">
-        <div class="bounty-title">🔴 NATIONWIDE BOUNTY 🔴</div>
-        <div class="bounty-car" id="bounty-target">Boulevard Nissan Skyline R34</div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- YouTube Video Feed -->
+    <div class="video-section">
+        <div class="video-header"><i class="fas fa-play-circle text-red-500"></i> Latest Hunting Intel</div>
+        <div class="video-scroller" id="news-container">
+            <div style="padding: 20px; color: var(--text-muted); font-size: 0.8rem;" id="news-loading">Scanning frequencies...</div>
+            <!-- Video Cards injected here -->
+        </div>
     </div>
 
+    <!-- Main Live Feed -->
     <div class="feed-container" id="feed">
         <!-- Posts will load here -->
     </div>
 
     <button class="fab" onclick="openTransmit()">
-        <span>📡</span> TRANSMIT INTEL
+        <i class="fas fa-broadcast-tower"></i> TRANSMIT INTEL
     </button>
 
-    <!-- Transmit Modal -->
+    <!-- Profile/Callsign Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <h2>Hunter Profile</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">Set your public callsign to start transmitting reports to the network.</p>
+            <div class="form-group">
+                <label>Callsign (Username)</label>
+                <input type="text" id="profile-name-input" placeholder="e.g. DiecastDave">
+            </div>
+            <button class="btn-submit" onclick="saveProfile()">SAVE PROFILE</button>
+            <button class="btn-cancel" onclick="closeModal('profile-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Transmit Intel Modal (With AI Scanner) -->
     <div class="modal-overlay" id="transmit-modal">
         <div class="modal">
-            <h2>Transmit Intel</h2>
+            <h2>Transmit Intel <i class="fas fa-times" onclick="closeModal('transmit-modal')" style="cursor:pointer; color: #64748b;"></i></h2>
+            
+            <!-- AI Photo Scanner UI -->
+            <div class="scanner-box">
+                <label for="photo-upload">
+                    <i class="fas fa-camera" style="font-size: 1.5rem;"></i>
+                    <span>Photographic Proof & AI Scan</span>
+                </label>
+                <input type="file" id="photo-upload" accept="image/*" capture="environment">
+                <img id="ai-preview" alt="Scan Preview">
+                <div class="ai-loading" id="ai-loading"><i class="fas fa-cog fa-spin"></i> AI Analyzing Packaging...</div>
+            </div>
+
             <div class="form-group">
-                <label>Store & Location</label>
+                <label>Store & Location *</label>
                 <input type="text" id="post-location" placeholder="e.g. Smyths, Manchester" required>
             </div>
             <div class="form-group">
-                <label>Car or Series Found</label>
+                <label>Car or Series Found *</label>
                 <input type="text" id="post-car" placeholder="e.g. Full restock of Neon Speeders" required>
             </div>
             <div class="form-group">
                 <label>Extra Intel (Optional)</label>
                 <input type="text" id="post-intel" placeholder="e.g. Only 2 left on the front pegs">
             </div>
-            <button class="btn-submit" onclick="submitPost()">TRANSMIT</button>
-            <button class="btn-cancel" onclick="closeModal('transmit-modal')">Cancel</button>
+            <button class="btn-submit" onclick="submitPost()"><i class="fas fa-paper-plane"></i> TRANSMIT</button>
         </div>
     </div>
 
-    <!-- Garage Modal -->
+    <!-- Garage (ISO) Modal -->
     <div class="modal-overlay" id="garage-modal">
         <div class="modal">
             <h2>My Garage (ISO List)</h2>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">List your top 5 most wanted cars. Slot #1 will be shown under your name on all your posts!</p>
             
             <div class="form-group iso-slot-1">
-                <label class="iso-label-1">1. Top Grail (Visible on Feed)</label>
+                <label class="iso-label-1"><i class="fas fa-crosshairs"></i> 1. Top Grail (Visible on Feed)</label>
                 <input type="text" id="iso-1" placeholder="e.g. STH Datsun 510">
             </div>
             <div class="form-group">
@@ -253,7 +311,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Application Logic & Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -262,115 +320,153 @@
         // PASTE YOUR FIREBASE CONFIG HERE
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
-  authDomain: "diecast-radar-5c38d.firebaseapp.com",
-  projectId: "diecast-radar-5c38d",
-  storageBucket: "diecast-radar-5c38d.firebasestorage.app",
-  messagingSenderId: "918192680035",
-  appId: "1:918192680035:web:d11555276d973b993b5c56",
-  measurementId: "G-T05Y2L42L5"
+            // apiKey: "...",
+            // authDomain: "...",
+            // projectId: "...",
+            // storageBucket: "...",
+            // messagingSenderId: "...",
+            // appId: "..."
         };
 
-        // If config is empty, we will use mock data for demonstration
         let db;
         let postsRef;
         const isFirebaseConfigured = !!firebaseConfig.apiKey;
 
-        if (isFirebaseConfigured) {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            postsRef = collection(db, "intel_posts");
-            
-            // Listen for live posts
-            const q = query(postsRef, orderBy("timestamp", "desc"));
-            onSnapshot(q, (snapshot) => {
-                document.getElementById('feed').innerHTML = '';
-                snapshot.forEach((doc) => {
-                    renderPost(doc.data());
-                });
-            });
-        } else {
-            // Mock Data if Firebase isn't hooked up yet
-            setTimeout(() => {
-                renderPost({
-                    username: "DiecastDave",
-                    streak: 4,
-                    topISO: "STH 56 Chevy",
-                    location: "Smyths, Liverpool",
-                    car: "Boulevard Restock! No Skylines left though.",
-                    intel: "Checked behind the main display, completely cleared out.",
-                    timestamp: new Date()
-                });
-                renderPost({
-                    username: "HunterUK",
-                    streak: 1,
-                    topISO: "Any Mainline Porsches",
-                    location: "Asda, Trafford",
-                    car: "Fresh Mainline Dump Bin",
-                    intel: "Lots of fantasy castings, found a few licensed Japanese cars.",
-                    timestamp: new Date(Date.now() - 3600000)
-                });
-            }, 500);
-        }
-
-        // Global functions for HTML buttons
-        window.openTransmit = () => {
-            if (!localStorage.getItem('radar_username')) {
-                setupProfile();
-                return;
-            }
-            document.getElementById('transmit-modal').style.display = 'flex';
+        // Custom UI Notification System (Replaces Alert/Confirm)
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.innerHTML = type === 'error' ? `<i class="fas fa-exclamation-triangle"></i> ${message}` : `<i class="fas fa-check-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3500);
         };
 
-        window.closeModal = (id) => {
-            document.getElementById(id).style.display = 'none';
-        };
+        // UI Modal Controls
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-        window.setupProfile = () => {
+        // Profile Management
+        window.openProfile = () => {
             const currentName = localStorage.getItem('radar_username') || '';
-            const newName = prompt("Enter your Hunter Callsign (Username):", currentName);
+            document.getElementById('profile-name-input').value = currentName;
+            openModal('profile-modal');
+        };
+
+        window.saveProfile = () => {
+            const newName = document.getElementById('profile-name-input').value.trim();
             if (newName) {
                 localStorage.setItem('radar_username', newName);
-                alert("Profile updated! You can now transmit intel.");
+                showToast("Profile callsign updated!");
+                closeModal('profile-modal');
+            } else {
+                showToast("Please enter a valid callsign.", "error");
             }
         };
 
+        // Garage Management
         window.openGarage = () => {
             const garage = JSON.parse(localStorage.getItem('radar_garage')) || ["", "", "", "", ""];
-            document.getElementById('iso-1').value = garage[0];
-            document.getElementById('iso-2').value = garage[1];
-            document.getElementById('iso-3').value = garage[2];
-            document.getElementById('iso-4').value = garage[3];
-            document.getElementById('iso-5').value = garage[4];
-            document.getElementById('garage-modal').style.display = 'flex';
+            for(let i=1; i<=5; i++) {
+                document.getElementById(`iso-${i}`).value = garage[i-1] || "";
+            }
+            openModal('garage-modal');
         };
 
         window.saveGarage = () => {
             const garage = [
-                document.getElementById('iso-1').value,
-                document.getElementById('iso-2').value,
-                document.getElementById('iso-3').value,
-                document.getElementById('iso-4').value,
-                document.getElementById('iso-5').value
+                document.getElementById('iso-1').value.trim(),
+                document.getElementById('iso-2').value.trim(),
+                document.getElementById('iso-3').value.trim(),
+                document.getElementById('iso-4').value.trim(),
+                document.getElementById('iso-5').value.trim()
             ];
             localStorage.setItem('radar_garage', JSON.stringify(garage));
             closeModal('garage-modal');
-            alert("Garage saved! Your Top Grail will now appear on your future posts.");
+            showToast("Garage saved! Your Top Grail is active.");
         };
 
+        window.openTransmit = () => {
+            if (!localStorage.getItem('radar_username')) {
+                showToast("Please set up your Hunter Profile first.", "error");
+                openProfile();
+                return;
+            }
+            openModal('transmit-modal');
+        };
+
+        // AI Scanner Integration
+        const AI_API_KEY = "AQ.Ab8RN6I87z4evgGw9oQNZxaAuGe4msQ2LuPdDUae1SOSSbl5MQ";
+        
+        document.getElementById('photo-upload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById('ai-preview');
+            const loading = document.getElementById('ai-loading');
+            const carInput = document.getElementById('post-car');
+
+            // Preview Image
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const base64String = event.target.result;
+                preview.src = base64String;
+                preview.style.display = 'block';
+                
+                loading.style.display = 'block';
+                carInput.value = "Scanning image...";
+
+                try {
+                    // Extract just the raw base64 data
+                    const base64Data = base64String.split(',')[1];
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: "Identify the diecast car or toys in this packaging. Respond ONLY with the name of the car or series. Be concise." },
+                                    { inlineData: { mimeType: file.type, data: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message);
+                    
+                    const carName = data.candidates[0].content.parts[0].text.trim();
+                    carInput.value = carName;
+                    showToast("AI successfully identified the car!");
+
+                } catch (err) {
+                    console.error("AI Error:", err);
+                    carInput.value = "";
+                    showToast("AI Scan failed. Please enter details manually.", "error");
+                } finally {
+                    loading.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Submit Post Logic
         window.submitPost = async () => {
-            const location = document.getElementById('post-location').value;
-            const car = document.getElementById('post-car').value;
-            const intel = document.getElementById('post-intel').value;
+            const location = document.getElementById('post-location').value.trim();
+            const car = document.getElementById('post-car').value.trim();
+            const intel = document.getElementById('post-intel').value.trim();
             const username = localStorage.getItem('radar_username');
             
-            // Get user's Top ISO from Garage
             const garage = JSON.parse(localStorage.getItem('radar_garage')) || ["", "", "", "", ""];
             const topISO = garage[0] || "";
 
-            if(!location || !car) { alert("Please fill in location and car!"); return; }
+            if(!location || !car) { 
+                showToast("Store Location and Car Found are required!", "error"); 
+                return; 
+            }
 
-            // Calculate Streak
+            // Streak Logic Calculation
             let streak = parseInt(localStorage.getItem('radar_streak')) || 0;
             let lastPostDate = localStorage.getItem('radar_last_post_date');
             let today = new Date().toDateString();
@@ -379,9 +475,9 @@
                 let yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 if (lastPostDate === yesterday.toDateString()) {
-                    streak += 1; // Posted yesterday, streak continues!
+                    streak += 1;
                 } else {
-                    streak = 1; // Missed a day, streak resets.
+                    streak = 1;
                 }
                 localStorage.setItem('radar_streak', streak);
                 localStorage.setItem('radar_last_post_date', today);
@@ -400,52 +496,54 @@
             if (isFirebaseConfigured) {
                 try {
                     await addDoc(postsRef, postData);
-                    document.getElementById('post-location').value = '';
-                    document.getElementById('post-car').value = '';
-                    document.getElementById('post-intel').value = '';
-                    closeModal('transmit-modal');
+                    resetForm();
                 } catch (e) {
-                    console.error("Error adding document: ", e);
-                    alert("Error saving to database.");
+                    console.error("DB Error:", e);
+                    showToast("Error saving to database.", "error");
                 }
             } else {
-                // If no firebase, just render it locally for testing
                 renderPost(postData, true);
-                closeModal('transmit-modal');
+                resetForm();
             }
         };
 
-        // Render Function
+        function resetForm() {
+            document.getElementById('post-location').value = '';
+            document.getElementById('post-car').value = '';
+            document.getElementById('post-intel').value = '';
+            document.getElementById('photo-upload').value = '';
+            document.getElementById('ai-preview').style.display = 'none';
+            closeModal('transmit-modal');
+            showToast("Intel transmitted successfully!");
+        }
+
+        // Render Feed Posts
         function renderPost(data, prepend = false) {
             const feed = document.getElementById('feed');
             const post = document.createElement('div');
             post.className = 'post-card';
             
-            // Format Timestamp
             let timeString = "Just now";
             if (data.timestamp && data.timestamp.toDate) {
                 timeString = data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
 
-            // Streak HTML
             let streakHTML = data.streak >= 2 ? `<span class="streak">🔥 ${data.streak}</span>` : '';
-            
-            // Top ISO HTML (The new feature!)
-            let topIsoHTML = data.topISO ? `<div class="top-iso-badge">🎯 ISO: ${data.topISO}</div>` : '';
+            let topIsoHTML = data.topISO ? `<div class="top-iso-badge"><i class="fas fa-crosshairs text-primary"></i> ISO: ${data.topISO}</div>` : '';
 
             post.innerHTML = `
                 <div class="post-header">
                     <div class="user-info">
                         <div class="username-row">
-                            <span class="username">${data.username}</span>
+                            <span class="username"><i class="fas fa-user-ninja"></i> ${data.username}</span>
                             ${streakHTML}
                         </div>
                         ${topIsoHTML}
                     </div>
                     <span class="time">${timeString}</span>
                 </div>
-                <div class="post-location">📍 ${data.location}</div>
-                <div class="post-car">🏎️ ${data.car}</div>
+                <div class="post-location"><i class="fas fa-map-marker-alt text-red-500"></i> ${data.location}</div>
+                <div class="post-car"><i class="fas fa-car-side"></i> ${data.car}</div>
                 ${data.intel ? `<div class="post-intel">"${data.intel}"</div>` : ''}
             `;
 
@@ -455,6 +553,94 @@
                 feed.appendChild(post);
             }
         }
+
+        // YouTube Dual-Source Fetch Logic
+        async function fetchDiecastNews() {
+            const container = document.getElementById('news-container');
+            const loading = document.getElementById('news-loading');
+            
+            if (container.dataset.loaded === 'true') return; 
+            
+            try {
+                const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
+                const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg');
+                
+                const [lamleyRes, twcRes] = await Promise.all([
+                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
+                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`)
+                ]);
+                
+                const lamleyData = await lamleyRes.json();
+                const twcData = await twcRes.json();
+                
+                let videos = [];
+                if (lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items);
+                if (twcData && twcData.items) videos = videos.concat(twcData.items);
+                
+                if (videos.length === 0) throw new Error("API returned empty data");
+                
+                videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
+                renderVideos(videos.slice(0, 10));
+
+            } catch(e) {
+                console.warn("Live fetch failed, deploying failsafe cache...");
+                const failsafeVideos = [
+                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
+                    { title: "Hot Wheels 2027 A Case Unboxing", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" }
+                ];
+                renderVideos(failsafeVideos);
+            }
+            
+            function renderVideos(videoArray) {
+                loading.style.display = 'none';
+                videoArray.forEach(item => {
+                    const pubDate = item.pubDate ? new Date(item.pubDate.replace(' ', 'T')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Recent';
+                    const imgSrc = item.thumbnail.replace('hqdefault.jpg', 'maxresdefault.jpg'); 
+
+                    const card = document.createElement('div');
+                    card.className = "video-card";
+                    card.innerHTML = `
+                        <div style="position: relative; cursor: pointer;" onclick="window.open('${item.link}', '_blank')">
+                            <img src="${imgSrc}" onerror="this.src='${item.thumbnail}'">
+                            <i class="fab fa-youtube" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; color: #dc2626; filter: drop-shadow(0 0 8px rgba(0,0,0,0.8));"></i>
+                        </div>
+                        <div class="video-card-content">
+                            <div class="video-meta">
+                                <span><i class="fas fa-video"></i> ${item.author}</span>
+                                <span class="video-date">${pubDate}</span>
+                            </div>
+                            <div class="video-title">${item.title}</div>
+                            <a href="${item.link}" target="_blank" class="video-btn">Watch Video</a>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                container.dataset.loaded = 'true';
+            }
+        }
+
+        // Initialize Data on Load
+        window.onload = () => {
+            fetchDiecastNews();
+            
+            // Firebase init simulation if keys are empty
+            if (isFirebaseConfigured) {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                postsRef = collection(db, "intel_posts");
+                
+                const q = query(postsRef, orderBy("timestamp", "desc"));
+                onSnapshot(q, (snapshot) => {
+                    document.getElementById('feed').innerHTML = '';
+                    snapshot.forEach((doc) => renderPost(doc.data()));
+                });
+            } else {
+                setTimeout(() => {
+                    renderPost({ username: "DiecastDave", streak: 4, topISO: "STH 56 Chevy", location: "Smyths, Liverpool", car: "Boulevard Restock! No Skylines left though.", intel: "Checked behind the main display, completely cleared out.", timestamp: new Date() });
+                    renderPost({ username: "HunterUK", streak: 1, topISO: "Any Mainline Porsches", location: "Asda, Trafford", car: "Fresh Mainline Dump Bin", intel: "Lots of fantasy castings, found a few licensed Japanese cars.", timestamp: new Date(Date.now() - 3600000) });
+                }, 500);
+            }
+        };
     </script>
 </body>
 </html>
