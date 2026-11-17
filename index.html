@@ -3,418 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diecast Radar UK - Live Spotter & Map</title>
-    
-    <!-- PWA Manifest Link -->
+    <title>Diecast Radar UK</title>
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Impact Affiliate Verification Tag -->
-    <meta name='impact-site-verification' value='c44d5c6f-8d4c-48e9-aa09-bb0d4d1f1108'>
-    
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta name="theme-color" content="#050510">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Diecast Radar">
-    
-    <link id="app-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23050510' stroke='%2322c55e' stroke-width='6'/><circle cx='50' cy='50' r='28' fill='none' stroke='%2322c55e' stroke-width='2' opacity='0.5'/><path d='M50 50 L82 18 A46 46 0 0 1 96 50 Z' fill='%2322c55e' opacity='0.45'/><circle cx='65' cy='35' r='5' fill='%234ade80'/><path d='M22 58 L28 46 L45 40 L70 40 L82 48 L84 58 Z' fill='%23ffffff'/></svg>">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Leaflet JS for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    <meta name="theme-color" content="#0f172a">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Oswald:wght@500;700&family=Racing+Sans+One&family=JetBrains+Mono:wght@700&display=swap');
-        
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            background-color: #050510;
-            background-image: radial-gradient(rgba(34, 197, 94, 0.05) 1px, transparent 1px);
-            background-size: 24px 24px;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            --bounty-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
-        /* Ambient Background Glows */
-        .ambient-glow { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; overflow: hidden; }
-        .glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%); border-radius: 50%; filter: blur(40px); animation: float 15s ease-in-out infinite alternate; }
-        .glow-2 { position: absolute; bottom: 10%; right: -20%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%); border-radius: 50%; filter: blur(60px); animation: float 20s ease-in-out infinite alternate-reverse; }
-        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(20px, 30px); } }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 80px;
+        }
 
-        .font-racing { font-family: 'Racing Sans One', cursive; letter-spacing: 1px; }
-        .font-oswald { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; }
-        .font-mono-price { font-family: 'JetBrains Mono', monospace; }
-        
-        .glass-card { background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(5, 10, 20, 0.9) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(34, 197, 94, 0.15); transition: transform 0.2s, box-shadow 0.2s; }
-        .glass-card:hover { border-color: rgba(34, 197, 94, 0.3); box-shadow: 0 10px 30px -10px rgba(34, 197, 94, 0.15); }
-        
-        .raided-stamp { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 3rem; color: rgba(239, 68, 68, 0.9); border: 4px solid rgba(239, 68, 68, 0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; font-family: 'Racing Sans One', cursive; letter-spacing: 4px; z-index: 20; pointer-events: none; text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.4), 0 0 15px rgba(239, 68, 68, 0.5); }
-        .post-fresh { border-left-color: rgba(34, 197, 94, 0.8); border-left-width: 4px; }
-        .post-raided { opacity: 0.65; filter: grayscale(50%); border-left-color: rgba(239, 68, 68, 0.5); border-left-width: 4px; }
+        /* Header & Navigation */
+        header {
+            background-color: var(--panel-bg);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 4px 15px var(--primary-glow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        @keyframes radarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .radar-circle { position: relative; border-radius: 50%; border: 3px solid #cbd5e1; background: #000; overflow: hidden; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4), inset 0 0 15px rgba(34, 197, 94, 0.4); }
-        .radar-grid { position: absolute; inset: 0; background: linear-gradient(90deg, transparent 49.5%, rgba(34, 197, 94, 0.5) 49.5%, rgba(34, 197, 94, 0.5) 50.5%, transparent 50.5%), linear-gradient(0deg, transparent 49.5%, rgba(34, 197, 94, 0.5) 49.5%, rgba(34, 197, 94, 0.5) 50.5%, transparent 50.5%), radial-gradient(circle, transparent 32%, rgba(34, 197, 94, 0.4) 33%, transparent 34%), radial-gradient(circle, transparent 65%, rgba(34, 197, 94, 0.4) 66%, transparent 67%); }
-        .radar-sweep { position: absolute; inset: 0; background: conic-gradient(from 0deg, transparent 75%, rgba(34, 197, 94, 0.7) 100%); border-radius: 50%; animation: radarSweep 2s linear infinite; transform-origin: center; }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
         
-        .leaflet-container { background: #0a0f18; font-family: 'Montserrat', sans-serif; }
-        .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(80%) contrast(120%); }
-        .leaflet-popup-content-wrapper { background: rgba(15, 23, 42, 0.95); color: white; border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; backdrop-filter: blur(5px); }
-        .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(34, 197, 94, 0.4); }
-        .custom-radar-marker { background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; border-radius: 50%; box-shadow: 0 0 15px #22c55e; animation: pulseMarker 2s infinite; }
-        @keyframes pulseMarker { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
 
-        ::-webkit-scrollbar { width: 6px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 3px; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Bounty Board */
+        .bounty-board {
+            background: linear-gradient(145deg, #2a1010, #1a0808);
+            border: 1px solid var(--bounty-red);
+            margin: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
         
-        .alert-tag { display: inline-flex; items-center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.5); color: #4ade80; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin: 0.25rem; }
+        .bounty-board::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: repeating-radial-gradient(circle, transparent, transparent 20px, rgba(239, 68, 68, 0.05) 21px, rgba(239, 68, 68, 0.05) 22px);
+            animation: radar 10s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes radar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .bounty-title { color: var(--bounty-red); font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; }
+        .bounty-car { font-size: 1.2rem; font-weight: bold; color: white; }
+
+        /* Feed */
+        .feed-container { padding: 0 15px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .post-card {
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .post-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        
+        .user-info { display: flex; flex-direction: column; gap: 2px; }
+        .username-row { display: flex; align-items: center; gap: 6px; }
+        .username { font-weight: bold; color: var(--primary); }
+        .streak { font-size: 0.8rem; color: #f97316; background: rgba(249, 115, 22, 0.15); padding: 2px 6px; border-radius: 12px; font-weight: bold; }
+        
+        .top-iso-badge {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        
+        .time { font-size: 0.75rem; color: var(--text-muted); }
+        .post-location { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+        .post-car { color: #e2e8f0; margin-bottom: 5px; }
+        .post-intel { font-size: 0.9rem; color: var(--text-muted); font-style: italic; }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 90;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center;
+            z-index: 200; padding: 20px;
+        }
+
+        .modal {
+            background: var(--panel-bg);
+            width: 100%; max-width: 400px;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal h2 { margin-bottom: 15px; color: white; font-size: 1.2rem; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px; border-radius: 6px;
+            background: #0f172a; border: 1px solid rgba(255,255,255,0.2);
+            color: white; font-size: 1rem;
+        }
+
+        .iso-slot-1 input { border-color: var(--primary); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+        .iso-label-1 { color: var(--primary) !important; font-weight: bold; }
+
+        .btn-submit {
+            width: 100%; background: var(--primary); color: #000;
+            border: none; padding: 12px; border-radius: 6px;
+            font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px;
+        }
+        
+        .btn-cancel {
+            width: 100%; background: transparent; color: var(--text-muted);
+            border: none; padding: 12px; margin-top: 5px; cursor: pointer;
+        }
+
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col">
+<body>
 
-    <!-- Ambient Background -->
-    <div class="ambient-glow">
-        <div class="glow-1"></div>
-        <div class="glow-2"></div>
+    <header>
+        <div class="logo">📡 DIECAST RADAR UK</div>
+        <div class="header-buttons">
+            <button class="btn-small" onclick="openGarage()">Garage</button>
+            <button class="btn-small" onclick="setupProfile()">Profile</button>
+        </div>
+    </header>
+
+    <div class="bounty-board">
+        <div class="bounty-title">🔴 NATIONWIDE BOUNTY 🔴</div>
+        <div class="bounty-car" id="bounty-target">Boulevard Nissan Skyline R34</div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="bg-black/95 backdrop-blur-md border-b-2 border-green-500/50 sticky top-0 z-40 shadow-[0_4px_20px_rgba(34,197,94,0.15)]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center group cursor-pointer" onclick="switchTab('feed')">
-                    <div class="w-12 h-12 mr-2.5 relative flex-shrink-0 rounded-full border-2 border-slate-700 bg-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.3)] overflow-hidden flex items-center justify-center group-hover:border-cyan-500 transition-colors duration-300">
-                        <div class="absolute inset-0 rounded-full border-[3px] border-black/50 z-20 pointer-events-none"></div>
-                        <div class="absolute inset-0 rounded-full border border-cyan-500/50 z-20 pointer-events-none m-[2px]"></div>
-                        
-                        <div class="absolute inset-0 z-0 opacity-70" style="background: linear-gradient(90deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), linear-gradient(0deg, transparent 49%, rgba(34, 197, 94, 0.4) 49%, rgba(34, 197, 94, 0.4) 51%, transparent 51%), radial-gradient(circle, transparent 32%, rgba(34, 197, 94, 0.3) 33%, transparent 34%), radial-gradient(circle, transparent 65%, rgba(34, 197, 94, 0.3) 66%, transparent 67%);"></div>
-                        <div class="radar-sweep absolute inset-0 z-0" style="background: conic-gradient(from 0deg, transparent 75%, rgba(34, 197, 94, 0.6) 100%); animation-duration: 3s;"></div>
-                        <i class="fas fa-map-marker-alt absolute top-2 left-2 text-[7px] text-cyan-400 z-10 drop-shadow-[0_0_3px_#22d3ee]"></i>
-                        <i class="fas fa-map-marker-alt absolute bottom-2 right-2 text-[6px] text-green-400 z-10 drop-shadow-[0_0_3px_#4ade80]"></i>
-                        
-                        <div class="absolute inset-0 flex items-center justify-center z-10 drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] mt-1">
-                            <svg viewBox="0 0 100 40" class="w-[34px]" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="car-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#475569" />
-                                        <stop offset="100%" stop-color="#0f172a" />
-                                    </linearGradient>
-                                </defs>
-                                <path d="M 85 20 L 85 10 L 98 10 L 98 12 L 87 12 L 87 20 Z" fill="#94a3b8"/> 
-                                <path d="M 5 28 L 5 22 L 20 20 L 35 12 L 60 12 L 75 16 L 90 20 L 98 22 L 98 28 Z" fill="url(#car-grad)" stroke="#cbd5e1" stroke-width="0.5"/>
-                                <path d="M 32 18 L 40 14 L 55 14 L 55 18 Z" fill="#bae6fd" opacity="0.7"/>
-                                <path d="M 58 14 L 70 14 L 78 18 L 58 18 Z" fill="#bae6fd" opacity="0.7"/>
-                                <circle cx="22" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
-                                <circle cx="80" cy="28" r="4.5" fill="#020617" stroke="#94a3b8" stroke-width="1.5"/>
-                                <rect x="5" y="23" width="4" height="2" fill="#e0f2fe" opacity="0.9" rx="1"/>
-                                <circle cx="95" cy="24" r="1.5" fill="#ef4444" opacity="0.9"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="font-racing tracking-wide flex items-baseline select-none flex-col sm:flex-row sm:items-baseline leading-none sm:leading-normal justify-center mt-1 sm:mt-0">
-                        <div>
-                            <span class="text-xl sm:text-2xl text-blue-200 drop-shadow-[0_0_8px_rgba(191,219,254,0.6)]">DIECAST</span>
-                            <span class="text-xl sm:text-2xl text-cyan-400 ml-1 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">RADAR</span>
-                        </div>
-                        <span class="text-xs sm:text-sm font-bold text-green-400 sm:ml-1.5 tracking-widest drop-shadow-[0_0_5px_rgba(74,222,128,0.6)] self-start sm:self-auto font-oswald pl-1 sm:pl-0 pt-0.5 sm:pt-0">UK</span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-2 sm:space-x-3">
-                    <button id="auth-btn" class="text-xs sm:text-sm text-slate-300 hover:text-white flex items-center bg-slate-900/80 border border-slate-700 hover:border-green-500/50 px-2.5 py-1.5 rounded-lg transition-all">
-                        <img id="user-avatar" src="" class="w-5 h-5 rounded-full hidden mr-2 border border-green-500">
-                        <i id="auth-icon" class="fab fa-google text-base sm:mr-2 text-white"></i>
-                        <span id="auth-text" class="hidden sm:inline font-mono-price">Sign In</span>
-                    </button>
-                    <button id="leaderboard-btn" class="text-slate-400 hover:text-yellow-400 bg-slate-900/80 border border-slate-700 hover:border-yellow-500/50 px-3 py-1.5 rounded-lg transition-all flex items-center">
-                        <i class="fas fa-trophy"></i>
-                    </button>
-                    <button id="alerts-btn" class="text-slate-400 hover:text-green-400 bg-slate-900/80 border border-slate-700 hover:border-green-500/50 px-3 py-1.5 rounded-lg transition-all flex items-center relative hidden">
-                        <i class="fas fa-bell"></i>
-                        <span id="alert-indicator" class="absolute -top-1 -right-1 flex h-3 w-3 hidden">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </span>
-                    </button>
-                    <button id="add-post-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center border border-green-400">
-                        <i class="fas fa-camera sm:mr-1.5"></i> <span class="hidden sm:inline">Report Stock</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div class="feed-container" id="feed">
+        <!-- Posts will load here -->
+    </div>
 
-    <main class="flex-grow max-w-3xl mx-auto px-4 sm:px-6 py-6 w-full flex flex-col relative z-10">
-        <!-- Live Status Banner -->
-        <div class="w-full bg-slate-900/40 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 mb-5 flex items-center justify-between shadow-lg">
-            <div class="flex items-center">
-                <span class="relative flex h-3 w-3 mr-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <span class="text-xs font-bold text-green-400 uppercase tracking-widest font-oswald">Radar Active</span>
-            </div>
-            <div class="text-xs text-slate-400 font-mono-price" id="active-posts-count">Scanning UK Stores...</div>
-        </div>
+    <button class="fab" onclick="openTransmit()">
+        <span>📡</span> TRANSMIT INTEL
+    </button>
 
-        <!-- Three-Way View Toggle -->
-        <div class="flex bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl mb-5 border border-slate-700 shadow-lg">
-            <button onclick="switchTab('feed')" id="tab-feed" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
-                <i class="fas fa-list-ul sm:mr-1.5"></i> <span class="hidden sm:inline">Feed</span>
-            </button>
-            <button onclick="switchTab('map')" id="tab-map" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
-                <i class="fas fa-map-marked-alt sm:mr-1.5"></i> <span class="hidden sm:inline">Map</span>
-            </button>
-            <button onclick="switchTab('news')" id="tab-news" class="flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all">
-                <i class="fab fa-youtube text-red-500 sm:mr-1.5"></i> <span class="hidden sm:inline">Videos</span>
-            </button>
-        </div>
-
-        <div id="filters-section" class="mb-6 relative">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-slate-400"></i>
-                </div>
-                <input type="text" id="filter-search" placeholder="Search town, store, or car..." class="w-full pl-11 bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-xl p-3.5 text-white text-sm focus:ring-green-500 focus:border-green-500 shadow-lg transition-all">
+    <!-- Transmit Modal -->
+    <div class="modal-overlay" id="transmit-modal">
+        <div class="modal">
+            <h2>Transmit Intel</h2>
+            <div class="form-group">
+                <label>Store & Location</label>
+                <input type="text" id="post-location" placeholder="e.g. Smyths, Manchester" required>
             </div>
+            <div class="form-group">
+                <label>Car or Series Found</label>
+                <input type="text" id="post-car" placeholder="e.g. Full restock of Neon Speeders" required>
+            </div>
+            <div class="form-group">
+                <label>Extra Intel (Optional)</label>
+                <input type="text" id="post-intel" placeholder="e.g. Only 2 left on the front pegs">
+            </div>
+            <button class="btn-submit" onclick="submitPost()">TRANSMIT</button>
+            <button class="btn-cancel" onclick="closeModal('transmit-modal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Garage Modal -->
+    <div class="modal-overlay" id="garage-modal">
+        <div class="modal">
+            <h2>My Garage (ISO List)</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">List your top 5 most wanted cars. Slot #1 will be shown under your name on all your posts!</p>
             
-            <div class="flex gap-2 overflow-x-auto mt-3 pb-1 scrollbar-hide text-[11px] font-bold uppercase tracking-wider">
-                <button onclick="setSearch('Treasure Hunt')" class="whitespace-nowrap bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-full px-3.5 py-1.5 hover:border-green-500 text-slate-300 transition-all shadow-sm">🔥 Treasure Hunt</button>
-                <button onclick="setSearch('Smyths')" class="whitespace-nowrap bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-full px-3.5 py-1.5 hover:border-green-500 text-slate-300 transition-all shadow-sm">🎯 Smyths Toys</button>
-                <button onclick="setSearch('Boulevard')" class="whitespace-nowrap bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-full px-3.5 py-1.5 hover:border-green-500 text-slate-300 transition-all shadow-sm">🛣️ Boulevard</button>
-                <button onclick="setSearch('B&M')" class="whitespace-nowrap bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-full px-3.5 py-1.5 hover:border-green-500 text-slate-300 transition-all shadow-sm">🛒 B&M</button>
-                <button onclick="setSearch('')" class="whitespace-nowrap bg-slate-900 text-green-400 px-2 py-1.5 hover:text-white transition-all"><i class="fas fa-times"></i> Clear</button>
+            <div class="form-group iso-slot-1">
+                <label class="iso-label-1">1. Top Grail (Visible on Feed)</label>
+                <input type="text" id="iso-1" placeholder="e.g. STH Datsun 510">
             </div>
-        </div>
-
-        <div class="relative flex-grow min-h-[500px]">
-            <!-- Feed View -->
-            <div id="feed-wrapper">
-                <!-- Weekly Bounty Board -->
-                <div class="block w-full bg-slate-900/60 backdrop-blur-md rounded-xl p-3 sm:p-4 mb-5 border border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.15)] overflow-hidden relative group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-rose-900/20 to-transparent pointer-events-none"></div>
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                    <i class="fas fa-crosshairs absolute -bottom-4 -right-4 text-7xl text-rose-500/10 -rotate-45 pointer-events-none group-hover:scale-110 transition-transform duration-500"></i>
-                    <div class="flex items-start justify-between relative z-10">
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <div class="bg-rose-950/80 rounded-lg w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]">
-                                <i class="fas fa-skull text-rose-400 text-lg sm:text-xl animate-pulse"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-rose-400 font-extrabold font-oswald tracking-wide text-sm sm:text-base leading-tight drop-shadow-sm flex items-center">
-                                    HIGH VALUE BOUNTY 
-                                    <span class="ml-2 bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-widest animate-pulse">Live</span>
-                                </h4>
-                                <p class="text-white text-xs sm:text-sm font-bold mt-1 leading-snug">Nissan Skyline GT-R (Boulevard Set)</p>
-                                <p class="text-slate-400 text-[10px] sm:text-xs mt-0.5 font-mono-price flex items-center">
-                                    <i class="fas fa-gift text-yellow-500 mr-1.5"></i> Reward: 'Bounty Hunter' Profile Flair
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Whatnot Referral Banner -->
-                <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="block w-full bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl p-3 sm:p-4 mb-5 shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-transform hover:scale-[1.02] border border-yellow-300/50 group">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <div class="bg-black/20 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-gift text-yellow-50 text-xl sm:text-2xl drop-shadow-md group-hover:animate-bounce"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-black font-extrabold font-oswald tracking-wide text-sm sm:text-base leading-tight drop-shadow-sm">CLAIM £10 FREE WHATNOT CREDIT</h4>
-                                <p class="text-yellow-950 text-[10px] sm:text-xs font-bold mt-0.5 leading-snug">Sign up via this link & use it on live diecast streams today!</p>
-                            </div>
-                        </div>
-                        <div class="bg-black/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-chevron-right text-yellow-950"></i>
-                        </div>
-                    </div>
-                </a>
-
-                <div id="feed-container" class="space-y-4 pb-10">
-                    <div id="loading-spinner" class="text-center py-16">
-                        <div class="w-16 h-16 mx-auto border-4 border-slate-800 border-t-green-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,197,94,0.3)]"></div>
-                        <p class="text-slate-400 font-oswald tracking-widest text-sm uppercase">Syncing global radar...</p>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label>2. Wanted Car</label>
+                <input type="text" id="iso-2" placeholder="e.g. Team Transport Porsche">
             </div>
-
-            <!-- Map View -->
-            <div id="map-container" class="hidden absolute inset-0 rounded-xl overflow-hidden border border-green-900/50 shadow-[0_0_30px_rgba(34,197,94,0.15)] z-0">
-                <div id="radar-map" class="w-full h-full bg-slate-900"></div>
-                <div class="absolute top-4 right-4 z-[400] bg-black/80 backdrop-blur-md p-3 rounded-lg border border-slate-700 shadow-lg pointer-events-none text-xs text-slate-300">
-                    <div class="flex items-center mb-1"><span class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] mr-2"></span> Fresh Intel</div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444] mr-2"></span> Raided (Empty)</div>
-                </div>
+            <div class="form-group">
+                <label>3. Wanted Car</label>
+                <input type="text" id="iso-3" placeholder="">
             </div>
-
-            <!-- Global News View -->
-            <div id="news-container" class="hidden pb-10 space-y-5" data-loaded="false">
-                <div class="bg-cyan-900/20 border border-cyan-500/30 rounded-xl p-4 mb-2 flex items-center shadow-lg">
-                    <i class="fab fa-youtube text-4xl text-red-600 mr-4 drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]"></i>
-                    <div>
-                        <h4 class="text-cyan-400 font-bold font-oswald tracking-wide">GLOBAL VIDEO INTEL</h4>
-                        <p class="text-xs text-slate-400">Intercepting latest unboxings and sneek peaks directly from YouTube.</p>
-                    </div>
-                </div>
-                <div id="news-loading" class="text-center py-12">
-                    <div class="w-12 h-12 mx-auto border-4 border-slate-800 border-t-red-600 rounded-full animate-spin mb-4"></div>
-                    <p class="text-slate-400 font-oswald tracking-widest text-xs uppercase">Intercepting video feed...</p>
-                </div>
-                <div id="news-feed-list" class="space-y-4">
-                    <!-- Video cards injected here -->
-                </div>
+            <div class="form-group">
+                <label>4. Wanted Car</label>
+                <input type="text" id="iso-4" placeholder="">
             </div>
-        </div>
-
-        <div id="empty-state" class="text-center py-16 text-slate-400 bg-slate-900/60 backdrop-blur-md rounded-xl border border-slate-700 shadow-xl hidden mt-2">
-            <div class="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-4 border border-slate-700 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-                <i class="fas fa-satellite-dish text-4xl text-green-500/40"></i>
+            <div class="form-group">
+                <label>5. Wanted Car</label>
+                <input type="text" id="iso-5" placeholder="">
             </div>
-            <h3 class="text-xl font-bold text-white mb-2 font-oswald tracking-wide">No signals detected</h3>
-            <p id="empty-state-text" class="text-sm max-w-md mx-auto mb-6 text-slate-400">Broaden your search or be the first to report a store restock in your area!</p>
-        </div>
-    </main>
-
-    <!-- Post Modal -->
-    <div id="post-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-50 flex justify-center items-start sm:items-center px-2 py-4 overflow-y-auto">
-        <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-lg shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden my-auto flex flex-col relative">
-            <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-black/80 sticky top-0 z-10">
-                <h3 class="text-lg font-bold text-green-400 font-oswald tracking-wide flex items-center">
-                    <i class="fas fa-satellite-dish mr-2 animate-pulse"></i> TRANSMIT INTEL
-                </h3>
-                <button type="button" onclick="closeModal('post-modal')" class="text-slate-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="post-form" class="p-5 space-y-4">
-                <div class="w-full">
-                    <label class="block text-xs font-bold text-green-400 mb-1.5 uppercase tracking-wider">Photographic Proof & AI Scan</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="post-image" id="image-upload-label" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700 border-dashed rounded-xl cursor-pointer bg-black/50 hover:bg-slate-800/50 hover:border-green-500/50 transition-all relative overflow-hidden group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <i class="fas fa-camera text-3xl text-slate-500 mb-2 group-hover:text-green-400 transition-colors"></i>
-                                <p class="text-xs text-slate-400 font-medium">Tap to snap pegs</p>
-                            </div>
-                            <img id="image-preview" class="absolute inset-0 w-full h-full object-cover hidden opacity-80" />
-                            <div id="image-remove-btn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hidden" onclick="event.preventDefault(); removeImage();"><i class="fas fa-times text-xs"></i></div>
-                            <input id="post-image" type="file" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)" />
-                        </label>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-green-400 mb-1.5 uppercase tracking-wider">Store *</label>
-                        <select id="post-store" required onchange="toggleCustomStore(this.value)" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none">
-                            <option value="">Select Retailer...</option>
-                            <option value="Smyths Toys">Smyths Toys</option>
-                            <option value="B&M Bargains">B&M Bargains</option>
-                            <option value="The Entertainer">The Entertainer</option>
-                            <option value="Home Bargains">Home Bargains</option>
-                            <option value="Tesco">Tesco</option>
-                            <option value="Asda">Asda</option>
-                            <option value="Sainsbury's">Sainsbury's</option>
-                            <option value="Morrisons">Morrisons</option>
-                            <option value="Poundland">Poundland</option>
-                            <option value="TK Maxx">TK Maxx</option>
-                            <option value="Somewhere Else">Somewhere Else...</option>
-                        </select>
-                        <input type="text" id="custom-store-name" placeholder="Type shop name..." class="hidden w-full bg-slate-800 border border-green-500/50 rounded-lg p-2.5 text-white text-sm mt-2">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-green-400 mb-1.5 uppercase tracking-wider">Town / City *</label>
-                        <input type="text" id="post-location" required placeholder="e.g. Manchester" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-green-400 mb-1.5 uppercase tracking-wider flex items-center justify-between">
-                        <span>Car or Series Found *</span>
-                    </label>
-                    <input type="text" id="post-car" required placeholder="e.g. Nissan Skyline or Boulevard Set" class="w-full bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all duration-300">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Extra Intel (Optional)</label>
-                    <textarea id="post-desc" rows="2" placeholder="e.g. 'Only 2 left on the front pegs!'" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white text-sm resize-none focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"></textarea>
-                </div>
-                <div class="pt-2 flex gap-3">
-                    <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.4)] flex justify-center items-center transition-all">
-                        <span><i class="fas fa-broadcast-tower mr-2"></i> Transmit</span>
-                    </button>
-                </div>
-            </form>
+            <button class="btn-submit" onclick="saveGarage()">SAVE GARAGE</button>
+            <button class="btn-cancel" onclick="closeModal('garage-modal')">Cancel</button>
         </div>
     </div>
 
-    <!-- Alerts Modal -->
-    <div id="alerts-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-50 flex justify-center items-center px-4">
-        <div class="bg-slate-900 border border-green-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(34,197,94,0.15)] overflow-hidden flex flex-col">
-            <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-black/80">
-                <h3 class="text-base font-bold text-green-400 font-oswald tracking-wide flex items-center">
-                    <i class="fas fa-bell mr-2"></i> RADAR ALERTS
-                </h3>
-                <button type="button" onclick="closeModal('alerts-modal')" class="text-slate-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-5">
-                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Enter a town, store, or car name. You will be notified immediately when new intel matches your keywords.</p>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="alert-keyword-input" placeholder="e.g. Manchester, Smyths..." class="flex-grow bg-black border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-green-500 outline-none">
-                    <button id="add-alert-btn" class="bg-slate-800 hover:bg-slate-700 text-green-400 px-4 rounded-lg font-bold transition-all"><i class="fas fa-plus"></i></button>
-                </div>
-                <div id="active-alerts-container" class="min-h-[60px] border border-slate-800 rounded-lg p-2 bg-black/50 mb-4 flex flex-wrap gap-1"></div>
-                <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                    <div class="text-xs font-bold text-slate-300">Browser Notifications</div>
-                    <button id="enable-notifications-btn" class="text-[10px] uppercase font-bold bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded transition-all">Enable</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-50 flex justify-center items-center px-4">
-        <div class="bg-slate-900 border border-yellow-500/40 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(234,179,8,0.15)] overflow-hidden flex flex-col max-h-[80vh]">
-            <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-black/80 sticky top-0">
-                <h3 class="text-base font-bold text-yellow-400 font-oswald tracking-wide flex items-center">
-                    <i class="fas fa-trophy mr-2 text-yellow-500 drop-shadow-[0_0_5px_#eab308]"></i> TOP HUNTERS
-                </h3>
-                <button type="button" onclick="closeModal('leaderboard-modal')" class="text-slate-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="px-5 py-2 bg-slate-800/50 border-b border-slate-700/50">
-                <p class="text-[10px] uppercase font-bold tracking-wider text-slate-400 text-center">Ranked by radar pings in the last 7 days</p>
-            </div>
-            <div class="p-0 overflow-y-auto" id="leaderboard-container"></div>
-        </div>
-    </div>
-
-    <!-- Custom Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden z-[60] flex justify-center items-center px-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-xs shadow-2xl overflow-hidden text-center p-6">
-            <h3 id="confirm-title" class="text-lg font-bold text-white font-oswald tracking-wide mb-2">Confirm Action</h3>
-            <p id="confirm-msg" class="text-slate-400 text-sm mb-6">Are you sure?</p>
-            <div class="flex gap-3">
-                <button id="confirm-no" class="flex-1 bg-slate-800 text-slate-300 py-2.5 rounded-lg text-xs font-bold uppercase transition-all hover:bg-slate-700">Cancel</button>
-                <button id="confirm-yes" class="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-xs font-bold uppercase shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-all hover:bg-green-500">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification-area" class="fixed top-20 right-4 z-[100] flex flex-col space-y-2 pointer-events-none"></div>
-
+    <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // ==========================================
-        // PASTE YOUR FIREBASE KEYS HERE
+        // PASTE YOUR FIREBASE CONFIG HERE
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
@@ -425,598 +270,191 @@
   appId: "1:918192680035:web:d11555276d973b993b5c56",
   measurementId: "G-T05Y2L42L5"
         };
-        // ==========================================
 
-        const GEMINI_API_KEY = "AQ.Ab8RN6I87z4evgGw9oQNZxaAuGe4msQ2LuPdDUae1SOSSbl5MQ"; 
+        // If config is empty, we will use mock data for demonstration
+        let db;
+        let postsRef;
+        const isFirebaseConfigured = !!firebaseConfig.apiKey;
 
-        let auth = null, provider = null, db = null, currentUser = null;
-        let allPosts = []; 
-        let map = null, mapMarkers = [];
-        let userAlertKeywords = []; 
-        
-        // --- NEW VARIABLES FOR HUNTING STREAK ---
-        let userStreakCount = 0;
-        let userLastPostDate = null;
-        // ----------------------------------------
-        
-        const safeAppId = typeof __app_id !== 'undefined' ? __app_id : 'diecastradar-v2';
-        const appLoadTime = Date.now(); 
-        
-        try {
+        if (isFirebaseConfigured) {
             const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            provider = new GoogleAuthProvider();
             db = getFirestore(app);
-        } catch (e) {
-            console.error("Firebase init error. Did you paste your keys?", e);
-        }
-
-        window.setSearch = (term) => {
-            const searchInput = document.getElementById('filter-search');
-            searchInput.value = term;
-            renderFeed();
-            if(!document.getElementById('map-container').classList.contains('hidden')) updateMapMarkers();
-        };
-
-        let confirmActionCallback = null;
-        window.showConfirm = (title, message, onConfirm) => {
-            document.getElementById('confirm-title').textContent = title;
-            document.getElementById('confirm-msg').textContent = message;
-            confirmActionCallback = onConfirm;
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        };
-        document.getElementById('confirm-no').addEventListener('click', () => {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            confirmActionCallback = null;
-        });
-        document.getElementById('confirm-yes').addEventListener('click', () => {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            if (confirmActionCallback) confirmActionCallback();
-        });
-        
-        async function fetchDiecastNews() {
-            const container = document.getElementById('news-container');
-            const list = document.getElementById('news-feed-list');
-            const loading = document.getElementById('news-loading');
-            if (container.dataset.loaded === 'true') return; 
+            postsRef = collection(db, "intel_posts");
             
-            try {
-                const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
-                const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg');
-                const [lamleyRes, twcRes] = await Promise.all([
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`)
-                ]);
-                const lamleyData = await lamleyRes.json();
-                const twcData = await twcRes.json();
-                
-                let videos = [];
-                if (lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items);
-                if (twcData && twcData.items) videos = videos.concat(twcData.items);
-                if (videos.length === 0) throw new Error("API returned empty data");
-                
-                videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
-                videos = videos.slice(0, 10);
-                renderVideos(videos);
-
-            } catch(e) {
-                console.warn("Live fetch failed, deploying failsafe cache...", e);
-                const failsafeVideos = [
-                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
-                    { title: "Hot Wheels 2027 A Case Unboxing: New Ferrari & Boneshaker", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" }
-                ];
-                renderVideos(failsafeVideos);
-            }
-            
-            function renderVideos(videoArray) {
-                loading.classList.add('hidden');
-                videoArray.forEach(item => {
-                    const pubDateRaw = item.pubDate; 
-                    const pubDate = pubDateRaw ? new Date(pubDateRaw.replace(' ', 'T')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Recent';
-                    let imgSrc = item.thumbnail.replace('hqdefault.jpg', 'maxresdefault.jpg'); 
-                    const card = document.createElement('div');
-                    card.className = "glass-card relative rounded-xl overflow-hidden shadow-lg border-cyan-500/20 mb-4 transition-all hover:border-cyan-500/50 bg-black";
-                    card.innerHTML = `
-                        <div class="relative cursor-pointer" onclick="window.open('${item.link}', '_blank')">
-                            <img src="${imgSrc}" class="w-full h-48 sm:h-56 object-cover opacity-80 border-b border-slate-800 transition-opacity hover:opacity-100" onerror="this.src='${item.thumbnail}'">
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform hover:scale-110">
-                                <i class="fab fa-youtube text-5xl text-red-600 drop-shadow-[0_0_15px_rgba(0,0,0,0.8)] opacity-90"></i>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-cyan-400 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-video mr-1"></i> ${item.author}</span>
-                                <span class="text-slate-400 text-[10px] font-mono-price">${pubDate}</span>
-                            </div>
-                            <h3 class="text-white font-bold text-sm leading-snug mb-3">${item.title}</h3>
-                            <a href="${item.link}" target="_blank" class="w-full flex items-center justify-center text-slate-200 hover:text-white bg-red-900/60 hover:bg-red-800/80 border border-red-700/50 hover:border-red-500/50 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
-                                Watch Video
-                            </a>
-                        </div>
-                    `;
-                    list.appendChild(card);
+            // Listen for live posts
+            const q = query(postsRef, orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                document.getElementById('feed').innerHTML = '';
+                snapshot.forEach((doc) => {
+                    renderPost(doc.data());
                 });
-                container.dataset.loaded = 'true';
-            }
-        }
-
-        document.getElementById('alerts-btn').addEventListener('click', () => {
-            renderAlertsList();
-            checkNotificationStatus();
-            document.getElementById('alerts-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('enable-notifications-btn').addEventListener('click', () => {
-            if (!("Notification" in window)) {
-                alert("This browser does not support desktop notification");
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    checkNotificationStatus();
-                    if(permission === "granted") showNotification("Browser notifications enabled!");
+            });
+        } else {
+            // Mock Data if Firebase isn't hooked up yet
+            setTimeout(() => {
+                renderPost({
+                    username: "DiecastDave",
+                    streak: 4,
+                    topISO: "STH 56 Chevy",
+                    location: "Smyths, Liverpool",
+                    car: "Boulevard Restock! No Skylines left though.",
+                    intel: "Checked behind the main display, completely cleared out.",
+                    timestamp: new Date()
                 });
-            }
-        });
-
-        function checkNotificationStatus() {
-            const btn = document.getElementById('enable-notifications-btn');
-            if (Notification.permission === "granted") {
-                btn.textContent = "Active";
-                btn.className = "text-[10px] uppercase font-bold bg-slate-700 text-green-400 px-3 py-1.5 rounded cursor-default";
-            } else if (Notification.permission === "denied") {
-                btn.textContent = "Blocked";
-                btn.className = "text-[10px] uppercase font-bold bg-red-900/50 text-red-400 px-3 py-1.5 rounded cursor-default";
-            }
+                renderPost({
+                    username: "HunterUK",
+                    streak: 1,
+                    topISO: "Any Mainline Porsches",
+                    location: "Asda, Trafford",
+                    car: "Fresh Mainline Dump Bin",
+                    intel: "Lots of fantasy castings, found a few licensed Japanese cars.",
+                    timestamp: new Date(Date.now() - 3600000)
+                });
+            }, 500);
         }
 
-        // --- UPDATED USER DATA LOAD (ALERTS + STREAK) ---
-        async function loadUserData() {
-            if(!currentUser || !db) return;
-            try {
-                const userDoc = await getDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    if (data.alerts) userAlertKeywords = data.alerts;
-                    if (data.streakCount) userStreakCount = data.streakCount;
-                    if (data.lastPostDate) userLastPostDate = data.lastPostDate;
-                } else {
-                    userAlertKeywords = [];
-                    userStreakCount = 0;
-                    userLastPostDate = null;
-                }
-                updateAlertIndicator();
-            } catch(e) {}
-        }
-
-        async function saveUserAlerts() {
-            if(!currentUser || !db) return;
-            try {
-                await setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid), {
-                    alerts: userAlertKeywords
-                }, { merge: true }); // Merge ensures we don't accidentally overwrite the streak data!
-                updateAlertIndicator();
-            } catch(e) {}
-        }
-
-        function updateAlertIndicator() {
-            const indicator = document.getElementById('alert-indicator');
-            if(userAlertKeywords.length > 0) indicator.classList.remove('hidden');
-            else indicator.classList.add('hidden');
-        }
-
-        function renderAlertsList() {
-            const container = document.getElementById('active-alerts-container');
-            container.innerHTML = '';
-            if(userAlertKeywords.length === 0) {
-                container.innerHTML = '<span class="text-slate-500 text-xs italic p-1">No active alerts...</span>';
+        // Global functions for HTML buttons
+        window.openTransmit = () => {
+            if (!localStorage.getItem('radar_username')) {
+                setupProfile();
                 return;
             }
-            userAlertKeywords.forEach((keyword, index) => {
-                const span = document.createElement('span');
-                span.className = 'alert-tag';
-                span.innerHTML = `${keyword} <i class="fas fa-times ml-2 cursor-pointer hover:text-white" onclick="removeAlert(${index})"></i>`;
-                container.appendChild(span);
-            });
-        }
-
-        document.getElementById('add-alert-btn').addEventListener('click', () => {
-            const input = document.getElementById('alert-keyword-input');
-            const val = input.value.trim().toLowerCase();
-            if(val && !userAlertKeywords.includes(val) && userAlertKeywords.length < 5) {
-                userAlertKeywords.push(val);
-                input.value = '';
-                renderAlertsList();
-                saveUserAlerts();
-            } else if (userAlertKeywords.length >= 5) {
-                showNotification("Maximum 5 alerts allowed.");
-            }
-        });
-
-        window.removeAlert = (index) => {
-            userAlertKeywords.splice(index, 1);
-            renderAlertsList();
-            saveUserAlerts();
+            document.getElementById('transmit-modal').style.display = 'flex';
         };
 
-        function checkForAlertMatch(postData) {
-            if(postData.timestamp < appLoadTime || (currentUser && postData.userId === currentUser.uid)) return;
-            const postString = `${postData.car || ''} ${postData.store} ${postData.location}`.toLowerCase();
-            const matchedKeyword = userAlertKeywords.find(keyword => postString.includes(keyword));
-            if(matchedKeyword) {
-                const title = `Radar Alert: ${postData.location}`;
-                const options = {
-                    body: `${postData.userName} just found intel matching "${matchedKeyword}"!`,
-                    icon: 'https://via.placeholder.com/128/050510/22c55e?text=RADAR'
-                };
-                if (Notification.permission === "granted") new Notification(title, options);
-                else showNotification(`ALERT: Intel found for "${matchedKeyword}" in ${postData.location}!`);
-            }
-        }
-
-        async function scanImageWithAI(base64Image) {
-            const carInput = document.getElementById('post-car');
-            carInput.value = "";
-            carInput.placeholder = "🤖 AI SCANNING IMAGE...";
-            carInput.classList.add('border-cyan-500', 'ring-1', 'ring-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.5)]');
-            try {
-                const base64Data = base64Image.split(',')[1];
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Identify the make and model of the diecast car in this image. Respond ONLY with the car name (e.g. 'Nissan Skyline GT-R' or 'Hot Wheels Boulevard Set'). Be extremely concise." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }] })
-                });
-                const data = await response.json();
-                if (data.error) {
-                    console.error("Gemini API Error:", data.error);
-                    carInput.placeholder = `AI Error: ${data.error.message}`;
-                    return;
-                }
-                if (data.candidates && data.candidates.length > 0) {
-                    let carName = data.candidates[0].content.parts[0].text.trim();
-                    carName = carName.replace(/\n/g, ' ').replace(/\*/g, '');
-                    carInput.value = carName;
-                } else {
-                    carInput.placeholder = "AI could not identify. Please type.";
-                }
-            } catch (error) {
-                console.error("AI Scan Error:", error);
-                carInput.placeholder = `Connection Error: ${error.message}`;
-            } finally {
-                carInput.classList.remove('border-cyan-500', 'ring-1', 'ring-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.5)]');
-            }
-        }
-
-        let currentCompressedImageBase64 = null;
-        window.previewImage = (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width, height = img.height;
-                    if (width > height && width > 800) { height *= 800 / width; width = 800; } 
-                    else if (height > 800) { width *= 800 / height; height = 800; }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    currentCompressedImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    document.getElementById('image-preview').src = currentCompressedImageBase64;
-                    document.getElementById('image-preview').classList.remove('hidden');
-                    document.getElementById('image-remove-btn').classList.remove('hidden');
-                    if (GEMINI_API_KEY) scanImageWithAI(currentCompressedImageBase64);
-                };
-            };
+        window.closeModal = (id) => {
+            document.getElementById(id).style.display = 'none';
         };
 
-        window.removeImage = () => {
-            document.getElementById('post-image').value = '';
-            document.getElementById('image-preview').classList.add('hidden');
-            document.getElementById('image-remove-btn').classList.add('hidden');
-            currentCompressedImageBase64 = null;
-            document.getElementById('post-car').placeholder = "e.g. Nissan Skyline or Boulevard Set";
+        window.setupProfile = () => {
+            const currentName = localStorage.getItem('radar_username') || '';
+            const newName = prompt("Enter your Hunter Callsign (Username):", currentName);
+            if (newName) {
+                localStorage.setItem('radar_username', newName);
+                alert("Profile updated! You can now transmit intel.");
+            }
         };
 
-        async function getCoordinates(city) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city + ', UK')}`);
-                const data = await res.json();
-                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-            } catch (error) {}
-            return null; 
-        }
-
-        function initMap() {
-            if (map) return;
-            map = L.map('radar-map', { zoomControl: false }).setView([53.4808, -2.2426], 6); 
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        }
-
-        window.switchTab = (tab) => {
-            const feedBtn = document.getElementById('tab-feed');
-            const mapBtn = document.getElementById('tab-map');
-            const newsBtn = document.getElementById('tab-news');
-            const feedWrapper = document.getElementById('feed-wrapper');
-            const mapContainer = document.getElementById('map-container');
-            const newsContainer = document.getElementById('news-container');
-            const filterSec = document.getElementById('filters-section');
-            const inactiveClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg text-slate-400 hover:text-white transition-all";
-            const activeClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-green-600 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all";
-            const activeNewsClass = "flex-1 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-cyan-900 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(8,145,178,0.3)] transition-all"; 
-
-            feedBtn.className = inactiveClass; mapBtn.className = inactiveClass; newsBtn.className = inactiveClass;
-            feedWrapper.classList.add('hidden'); mapContainer.classList.add('hidden'); newsContainer.classList.add('hidden');
-
-            if (tab === 'feed') { feedBtn.className = activeClass; feedWrapper.classList.remove('hidden'); filterSec.classList.remove('hidden'); } 
-            else if (tab === 'map') { mapBtn.className = activeClass; filterSec.classList.add('hidden'); mapContainer.classList.remove('hidden'); initMap(); setTimeout(() => map.invalidateSize(), 100); updateMapMarkers(); } 
-            else if (tab === 'news') { newsBtn.className = activeNewsClass; filterSec.classList.add('hidden'); newsContainer.classList.remove('hidden'); fetchDiecastNews(); }
+        window.openGarage = () => {
+            const garage = JSON.parse(localStorage.getItem('radar_garage')) || ["", "", "", "", ""];
+            document.getElementById('iso-1').value = garage[0];
+            document.getElementById('iso-2').value = garage[1];
+            document.getElementById('iso-3').value = garage[2];
+            document.getElementById('iso-4').value = garage[3];
+            document.getElementById('iso-5').value = garage[4];
+            document.getElementById('garage-modal').style.display = 'flex';
         };
 
-        onAuthStateChanged(auth, (user) => {
-            const authText = document.getElementById('auth-text');
-            const authIcon = document.getElementById('auth-icon');
-            const userAvatar = document.getElementById('user-avatar');
-            const alertsBtn = document.getElementById('alerts-btn');
-            if (user) {
-                currentUser = user; authText.textContent = user.displayName.split(' ')[0]; authIcon.classList.add('hidden');
-                userAvatar.src = user.photoURL; userAvatar.classList.remove('hidden'); alertsBtn.classList.remove('hidden'); 
-                loadUserData(); // Load alerts AND streak data
-            } else {
-                currentUser = null; userAlertKeywords = []; userStreakCount = 0; userLastPostDate = null;
-                authText.textContent = "Sign In"; authIcon.classList.remove('hidden');
-                userAvatar.classList.add('hidden'); alertsBtn.classList.add('hidden');
-            }
-            renderFeed();
-        });
+        window.saveGarage = () => {
+            const garage = [
+                document.getElementById('iso-1').value,
+                document.getElementById('iso-2').value,
+                document.getElementById('iso-3').value,
+                document.getElementById('iso-4').value,
+                document.getElementById('iso-5').value
+            ];
+            localStorage.setItem('radar_garage', JSON.stringify(garage));
+            closeModal('garage-modal');
+            alert("Garage saved! Your Top Grail will now appear on your future posts.");
+        };
 
-        document.getElementById('auth-btn').addEventListener('click', async () => {
-            if (currentUser) {
-                showConfirm("Sign Out", "Are you sure you want to disconnect?", async () => { await signOut(auth); showNotification("Disconnected from Radar."); });
-            } else {
-                try { await signInWithPopup(auth, provider); } catch (error) { showNotification("Connection failed. Try again."); }
-            }
-        });
-
-        if(db) {
-            const postsColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'posts');
-            onSnapshot(postsColRef, (snapshot) => {
-                snapshot.docChanges().forEach((change) => { if (change.type === "added") checkForAlertMatch(change.doc.data()); });
-                allPosts = [];
-                snapshot.docs.forEach((doc) => { allPosts.push({ id: doc.id, ...doc.data() }); });
-                allPosts.sort((a, b) => b.timestamp - a.timestamp);
-                document.getElementById('active-posts-count').innerHTML = `<i class="fas fa-list-ul mr-1"></i> ${allPosts.length} Reports`;
-                renderFeed();
-                if(!document.getElementById('map-container').classList.contains('hidden')) updateMapMarkers();
-            });
-        }
-
-        document.getElementById('add-post-btn').addEventListener('click', () => {
-            if (!currentUser) { showNotification("Authentication required to transmit."); return; }
-            document.getElementById('post-form').reset();
-            removeImage();
-            toggleCustomStore('');
-            document.getElementById('post-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('post-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transmitting...';
-            submitBtn.disabled = true;
-
-            let finalStoreName = document.getElementById('post-store').value;
-            if (finalStoreName === 'Somewhere Else') finalStoreName = document.getElementById('custom-store-name').value.trim();
-            const location = document.getElementById('post-location').value.trim();
-            const coords = await getCoordinates(location);
-
-            // --- HUNTING STREAK LOGIC ---
-            const now = new Date();
-            const todayStr = now.toLocaleDateString('en-GB'); // Standardize as Day/Month/Year
+        window.submitPost = async () => {
+            const location = document.getElementById('post-location').value;
+            const car = document.getElementById('post-car').value;
+            const intel = document.getElementById('post-intel').value;
+            const username = localStorage.getItem('radar_username');
             
-            let newStreak = userStreakCount;
-            
-            // Check if they already posted today. If not, evaluate streak.
-            if (userLastPostDate !== todayStr) {
-                const yesterday = new Date(now);
+            // Get user's Top ISO from Garage
+            const garage = JSON.parse(localStorage.getItem('radar_garage')) || ["", "", "", "", ""];
+            const topISO = garage[0] || "";
+
+            if(!location || !car) { alert("Please fill in location and car!"); return; }
+
+            // Calculate Streak
+            let streak = parseInt(localStorage.getItem('radar_streak')) || 0;
+            let lastPostDate = localStorage.getItem('radar_last_post_date');
+            let today = new Date().toDateString();
+
+            if (lastPostDate !== today) {
+                let yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toLocaleDateString('en-GB');
-                
-                // If they posted yesterday, increase streak. If not, reset to 1.
-                if (userLastPostDate === yesterdayStr) {
-                    newStreak += 1;
+                if (lastPostDate === yesterday.toDateString()) {
+                    streak += 1; // Posted yesterday, streak continues!
                 } else {
-                    newStreak = 1;
+                    streak = 1; // Missed a day, streak resets.
                 }
+                localStorage.setItem('radar_streak', streak);
+                localStorage.setItem('radar_last_post_date', today);
             }
-            
-            // Update local variables
-            userStreakCount = newStreak;
-            userLastPostDate = todayStr;
-            
-            try {
-                // 1. Save the new streak to the User's master profile
-                await setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'users', currentUser.uid), {
-                    streakCount: userStreakCount,
-                    lastPostDate: userLastPostDate
-                }, { merge: true });
 
-                // 2. Attach the streak number to this specific Post
-                await addDoc(collection(db, 'artifacts', safeAppId, 'public', 'data', 'posts'), {
-                    userId: currentUser.uid, userName: currentUser.displayName, userPhoto: currentUser.photoURL,
-                    userStreak: userStreakCount, // <-- Streak saved here
-                    store: finalStoreName, location: location, coordinates: coords, 
-                    car: document.getElementById('post-car').value.trim(), desc: document.getElementById('post-desc').value.trim(),
-                    image: currentCompressedImageBase64, timestamp: Date.now(), emptyVotes: 0, comments: [] 
-                });
-                
-                showNotification("Intel Broadcasted Successfully!"); 
-                closeModal('post-modal');
-            } catch (error) {
-                showNotification("Error broadcasting intel.");
-            } finally {
-                submitBtn.innerHTML = '<span><i class="fas fa-broadcast-tower mr-2"></i> Transmit</span>'; submitBtn.disabled = false;
-            }
-        });
+            const postData = {
+                username: username,
+                streak: streak,
+                topISO: topISO,
+                location: location,
+                car: car,
+                intel: intel,
+                timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
+            };
 
-        document.getElementById('leaderboard-btn').addEventListener('click', () => { renderLeaderboard(); document.getElementById('leaderboard-modal').classList.remove('hidden'); });
-
-        function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-container');
-            container.innerHTML = '';
-            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-            const recentPosts = allPosts.filter(p => p.timestamp >= sevenDaysAgo);
-            const userCounts = {};
-            recentPosts.forEach(p => {
-                if (!p.userId) return;
-                if (!userCounts[p.userId]) userCounts[p.userId] = { name: p.userName || 'Unknown Hunter', photo: p.userPhoto || 'https://via.placeholder.com/40', count: 0 };
-                userCounts[p.userId].count++;
-            });
-            const sortedUsers = Object.values(userCounts).sort((a, b) => b.count - a.count);
-            if (sortedUsers.length === 0) { container.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No intel transmitted this week yet.<br>Be the first to hit the radar!</div>'; return; }
-            sortedUsers.forEach((user, index) => {
-                let rankIcon = `<span class="text-slate-500 font-bold text-lg w-8 text-center">${index + 1}</span>`;
-                if (index === 0) rankIcon = `<i class="fas fa-medal text-yellow-400 text-2xl drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] w-8 text-center"></i>`;
-                if (index === 1) rankIcon = `<i class="fas fa-medal text-slate-300 text-xl drop-shadow-[0_0_8px_rgba(203,213,225,0.6)] w-8 text-center"></i>`;
-                if (index === 2) rankIcon = `<i class="fas fa-medal text-amber-600 text-xl drop-shadow-[0_0_8px_rgba(217,119,6,0.6)] w-8 text-center"></i>`;
-                const div = document.createElement('div');
-                div.className = `flex items-center justify-between p-4 border-b border-slate-800/50 ${index === 0 ? 'bg-yellow-900/10' : ''}`;
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">${rankIcon}<img src="${user.photo}" class="w-10 h-10 rounded-full border ${index === 0 ? 'border-yellow-400' : 'border-slate-600'} object-cover shadow-md"><div class="font-bold ${index === 0 ? 'text-yellow-400' : 'text-slate-200'} text-sm">${user.name}</div></div>
-                    <div class="bg-slate-800 ${index === 0 ? 'text-yellow-400 border-yellow-500/30' : 'text-green-400 border-green-500/30'} font-mono-price text-xs px-3 py-1.5 rounded-full border">${user.count} <i class="fas fa-satellite-dish ml-1"></i></div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-        window.toggleCustomStore = (val) => {
-            const customInput = document.getElementById('custom-store-name');
-            if (val === 'Somewhere Else') { customInput.classList.remove('hidden'); customInput.required = true; } 
-            else { customInput.classList.add('hidden'); customInput.required = false; customInput.value = ''; }
-        };
-        window.showNotification = (msg) => {
-            const area = document.getElementById('notification-area');
-            const notif = document.createElement('div');
-            notif.className = `px-4 py-2.5 rounded-lg text-white shadow-lg text-xs font-bold font-oswald uppercase bg-green-700 border border-green-400 z-[100] animate-pulse`;
-            notif.textContent = msg;
-            area.appendChild(notif);
-            setTimeout(() => { notif.remove(); }, 4000);
-        }
-
-        window.markEmpty = (postId) => {
-            if (!currentUser) { showNotification("Auth required to vote."); return; }
-            showConfirm("Pegs Empty?", "Are you at the store confirming the stock is gone?", async () => {
-                const post = allPosts.find(p => p.id === postId);
-                if (post) {
-                    try {
-                        const postRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'posts', postId);
-                        await updateDoc(postRef, { emptyVotes: (post.emptyVotes || 0) + 1 });
-                        showNotification(post.emptyVotes + 1 >= 3 ? "Post stamped as RAIDED!" : "Empty vote recorded.");
-                    } catch (error) {}
+            if (isFirebaseConfigured) {
+                try {
+                    await addDoc(postsRef, postData);
+                    document.getElementById('post-location').value = '';
+                    document.getElementById('post-car').value = '';
+                    document.getElementById('post-intel').value = '';
+                    closeModal('transmit-modal');
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    alert("Error saving to database.");
                 }
-            });
+            } else {
+                // If no firebase, just render it locally for testing
+                renderPost(postData, true);
+                closeModal('transmit-modal');
+            }
         };
 
-        window.deletePost = (postId) => {
-            if (!currentUser) return;
-            showConfirm("Delete Intel", "Are you sure you want to permanently delete this report?", async () => {
-                try { await deleteDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'posts', postId)); showNotification("Intel securely deleted."); } 
-                catch (error) { showNotification("Error deleting intel."); }
-            });
-        };
-
-        function renderFeed() {
-            const container = document.getElementById('feed-container');
-            const emptyState = document.getElementById('empty-state');
-            container.innerHTML = ''; 
+        // Render Function
+        function renderPost(data, prepend = false) {
+            const feed = document.getElementById('feed');
+            const post = document.createElement('div');
+            post.className = 'post-card';
             
-            const search = document.getElementById('filter-search').value.toLowerCase();
-            let filtered = allPosts.filter(post => {
-                if (search) return `${post.car || ''} ${post.desc} ${post.store} ${post.location} ${post.userName}`.toLowerCase().includes(search);
-                return true;
-            });
+            // Format Timestamp
+            let timeString = "Just now";
+            if (data.timestamp && data.timestamp.toDate) {
+                timeString = data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
 
-            if (filtered.length === 0) emptyState.classList.remove('hidden');
-            else { emptyState.classList.add('hidden'); filtered.forEach(post => container.appendChild(createPostCard(post))); }
-        }
+            // Streak HTML
+            let streakHTML = data.streak >= 2 ? `<span class="streak">🔥 ${data.streak}</span>` : '';
+            
+            // Top ISO HTML (The new feature!)
+            let topIsoHTML = data.topISO ? `<div class="top-iso-badge">🎯 ISO: ${data.topISO}</div>` : '';
 
-        function createPostCard(post) {
-            const timeAgo = Math.max(1, Math.floor((Date.now() - post.timestamp) / 60000));
-            let timeString = `${timeAgo}m ago`;
-            if (timeAgo > 60 && timeAgo < 1440) timeString = `${Math.floor(timeAgo/60)}h ago`;
-            if (timeAgo >= 1440) timeString = `${Math.floor(timeAgo/1440)}d ago`;
-
-            const isRaided = post.emptyVotes >= 3;
-            const freshnessClass = isRaided ? 'post-raided' : 'post-fresh';
-            const ebaySearchTerm = encodeURIComponent((post.car || 'diecast') + ' uk');
-            const ebayLink = `https://www.ebay.co.uk/sch/i.html?_nkw=${ebaySearchTerm}`;
-            const watermarkIcon = post.image ? '' : '<i class="fas fa-car-side absolute -bottom-6 -right-6 text-8xl text-slate-800/20 -rotate-12 pointer-events-none"></i>';
-            const isOwner = currentUser && post.userId === currentUser.uid;
-
-            // --- RENDER THE STREAK BADGE ---
-            const streakBadge = (post.userStreak && post.userStreak >= 2) 
-                ? `<span class="text-orange-500 font-bold ml-2 text-xs bg-orange-950/40 px-1.5 py-0.5 rounded border border-orange-900/50" title="${post.userStreak} Day Streak!"><i class="fas fa-fire animate-pulse"></i> ${post.userStreak}</span>` 
-                : '';
-
-            const div = document.createElement('div');
-            div.className = `glass-card relative rounded-xl overflow-hidden shadow-lg p-5 mb-5 ${freshnessClass}`;
-            div.innerHTML = `
-                ${watermarkIcon}
-                ${isRaided ? '<div class="raided-stamp">RAIDED</div>' : ''}
-                <div class="flex justify-between items-center mb-4 relative z-10">
-                    <div class="flex items-center gap-3">
-                        <img src="${post.userPhoto || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-green-500/50 shadow-md object-cover">
-                        <div>
-                            <div class="font-bold text-slate-100 text-sm flex items-center">${post.userName || 'Collector'} ${streakBadge}</div>
-                            <div class="text-green-400 font-mono-price text-[10px] uppercase flex items-center"><i class="fas fa-satellite-dish mr-1 text-[9px] animate-pulse"></i> ${timeString}</div>
+            post.innerHTML = `
+                <div class="post-header">
+                    <div class="user-info">
+                        <div class="username-row">
+                            <span class="username">${data.username}</span>
+                            ${streakHTML}
                         </div>
+                        ${topIsoHTML}
                     </div>
+                    <span class="time">${timeString}</span>
                 </div>
-                <div class="relative z-10">
-                    <div class="inline-flex items-center gap-1.5 bg-green-950/40 text-green-400 text-[10px] font-bold uppercase px-3 py-1.5 rounded-md border border-green-900/50 mb-3 shadow-[0_0_10px_rgba(34,197,94,0.1)]"><i class="fas fa-map-marker-alt"></i> ${post.store} - ${post.location}</div>
-                    ${post.car ? `<div class="font-bold text-white text-lg sm:text-xl tracking-wide mb-2 drop-shadow-md">${post.car}</div>` : ''}
-                    ${post.desc ? `<p class="text-slate-300 text-sm leading-relaxed mb-4 border-l-2 border-slate-700 pl-3 italic">${post.desc}</p>` : ''}
-                </div>
-                ${post.image ? `<div class="my-4 rounded-lg overflow-hidden border border-slate-700/50 shadow-lg relative z-10 bg-black"><img src="${post.image}" class="w-full h-56 object-contain hover:opacity-90 transition-opacity"></div>` : ''}
-                <div class="flex flex-wrap gap-2 items-center justify-between border-t border-slate-800/80 pt-4 mt-2 relative z-10">
-                    <div class="flex gap-2 flex-1">
-                        <a href="${ebayLink}" target="_blank" class="text-blue-400/90 hover:text-white bg-blue-950/40 border border-blue-900/50 px-4 py-2 rounded-lg text-xs uppercase font-bold tracking-wider transition-all flex items-center shadow-[0_0_10px_rgba(59,130,246,0.1)] hover:bg-blue-900/60"><i class="fab fa-ebay mr-1.5 text-base"></i> Value</a>
-                        ${isOwner ? `<button onclick="deletePost('${post.id}')" class="text-slate-400 hover:text-red-400 bg-slate-900/40 border border-slate-800 hover:border-red-900/50 px-3.5 py-2 rounded-lg transition-all"><i class="fas fa-trash-alt"></i></button>` : ''}
-                    </div>
-                    ${!isRaided ? `<button onclick="markEmpty('${post.id}')" class="text-red-400 hover:text-white bg-red-950/40 border border-red-900/50 px-4 py-2 rounded-lg text-xs uppercase font-bold tracking-wider transition-all shadow-[0_0_10px_rgba(239,68,68,0.1)] hover:bg-red-900/60"><i class="fas fa-ban mr-1.5"></i> Pegs Empty (${post.emptyVotes || 0})</button>` : ''}
-                </div>
+                <div class="post-location">📍 ${data.location}</div>
+                <div class="post-car">🏎️ ${data.car}</div>
+                ${data.intel ? `<div class="post-intel">"${data.intel}"</div>` : ''}
             `;
-            return div;
-        }
 
-        document.getElementById('filter-search').addEventListener('input', () => { renderFeed(); if(!document.getElementById('map-container').classList.contains('hidden')) updateMapMarkers(); });
-
-        function updateMapMarkers() {
-            if(!map) return;
-            mapMarkers.forEach(m => map.removeLayer(m));
-            mapMarkers = [];
-            const search = document.getElementById('filter-search').value.toLowerCase();
-            let hasFreshMarkers = false;
-            let bounds = L.latLngBounds();
-            allPosts.forEach(post => {
-                if (search && !`${post.car || ''} ${post.desc} ${post.store} ${post.location}`.toLowerCase().includes(search)) return;
-                if (!post.coordinates) return; 
-                const isRaided = post.emptyVotes >= 3;
-                const markerColor = isRaided ? '#ef4444' : '#22c55e'; 
-                const className = isRaided ? '' : 'custom-radar-marker';
-                const customIcon = L.divIcon({ className: className, html: `<div style="background-color:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid #000;"></div>`, iconSize: [12, 12] });
-                const popupHtml = `<div class="p-1"><div class="font-bold text-sm mb-1">${post.store}</div><div class="text-xs text-green-400 mb-1">${post.car}</div>${isRaided ? '<div class="text-red-500 font-bold text-xs uppercase mt-1">RAIDED</div>' : ''}</div>`;
-                const marker = L.marker([post.coordinates.lat, post.coordinates.lng], {icon: customIcon}).bindPopup(popupHtml).addTo(map);
-                mapMarkers.push(marker); bounds.extend([post.coordinates.lat, post.coordinates.lng]); hasFreshMarkers = true;
-            });
-            if(hasFreshMarkers) map.fitBounds(bounds, {padding: [50, 50], maxZoom: 12});
+            if (prepend) {
+                feed.insertBefore(post, feed.firstChild);
+            } else {
+                feed.appendChild(post);
+            }
         }
-        
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => { console.log('SW setup failed:', err); }); }); }
     </script>
 </body>
 </html>
