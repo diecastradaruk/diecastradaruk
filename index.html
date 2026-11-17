@@ -56,7 +56,7 @@
         /* Custom Map Radar Ping */
         .custom-radar-icon { position: relative; }
         
-        /* Dark Mode Map CSS Trick (Inverts the free OpenStreetMap to Dark Mode!) */
+        /* Dark Mode Map CSS Trick */
         .leaflet-tile {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
@@ -64,10 +64,10 @@
 </head>
 <body class="pb-24">
 
-    <!-- Header (Exact Pic 1 Style) -->
+    <!-- Header -->
     <header class="bg-radar-panel border-b border-radar-primary shadow-[0_4px_15px_rgba(16,185,129,0.2)] sticky top-0 z-50 flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-2">
-            <!-- Restored: Spinning Radar Car Logo -->
+            <!-- Spinning Radar Car Logo -->
             <div class="relative w-9 h-9 rounded-full border border-radar-primary/50 bg-[#050b14] overflow-hidden flex items-center justify-center shadow-[0_0_8px_rgba(16,185,129,0.4)]">
                 <div class="absolute inset-0 border-2 border-radar-primary/20 rounded-full"></div>
                 <!-- Radar sweep -->
@@ -94,13 +94,10 @@
                 <span class="text-sm font-bold text-slate-200" id="header-username">Sign In</span>
             </button>
             
-            <!-- Trophy & Bell Icons -->
-            <button class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition hidden sm:flex">
-                <i class="fas fa-trophy text-sm"></i>
-            </button>
-            <button class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition relative hidden sm:flex">
-                <i class="fas fa-bell text-sm"></i>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <!-- Garage Button -->
+            <button onclick="openGarage()" class="flex items-center gap-2 bg-radar-accent border border-slate-700 rounded-full px-3 py-1 hover:bg-slate-700 transition">
+                <i class="fas fa-warehouse text-radar-primary text-sm"></i>
+                <span class="text-xs font-bold text-slate-300 hidden sm:inline">Garage</span>
             </button>
             
             <button onclick="openTransmit()" class="hidden md:flex items-center gap-2 bg-radar-primary text-black px-4 py-2 rounded-lg font-black text-sm hover:bg-green-400 transition shadow-[0_0_10px_rgba(16,185,129,0.4)]">
@@ -126,7 +123,7 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs (Pic 1 Style) -->
+        <!-- Navigation Tabs -->
         <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800 relative z-40">
             <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md">
                 <i class="fas fa-list"></i> FEED
@@ -191,7 +188,43 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Transmit Modal (With Camera & Hidden GPS extraction) -->
+    <!-- Garage (ISO) Modal -->
+    <div class="modal-overlay" id="garage-modal">
+        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-white font-bold text-lg"><i class="fas fa-warehouse text-radar-primary"></i> My Garage (ISO)</h2>
+                <i class="fas fa-times text-slate-400 cursor-pointer hover:text-white" onclick="closeModal('garage-modal')"></i>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">List the top 5 cars you are hunting for. Your #1 Grail will appear on all your intel posts!</p>
+            <div class="space-y-3">
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-radar-primary font-black">#1</span>
+                    <input type="text" id="iso-1" placeholder="Your Top Grail..." class="w-full bg-[#050b14] border border-radar-primary rounded-lg pl-8 p-2 text-white focus:outline-none focus:ring-1 focus:ring-radar-primary font-bold">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#2</span>
+                    <input type="text" id="iso-2" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#3</span>
+                    <input type="text" id="iso-3" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#4</span>
+                    <input type="text" id="iso-4" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#5</span>
+                    <input type="text" id="iso-5" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
+                </div>
+            </div>
+            <button onclick="saveGarage()" class="w-full mt-5 bg-radar-primary text-black font-black py-3 rounded-lg hover:bg-green-400 transition shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                SAVE GARAGE
+            </button>
+        </div>
+    </div>
+
+    <!-- Transmit Modal (With Camera) -->
     <div class="modal-overlay" id="transmit-modal">
         <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar relative">
             <div class="flex justify-between items-center mb-4">
@@ -257,7 +290,6 @@
 
         // Map Variables
         let liveMap = null;
-        let mapMarkers = [];
 
         // UI Helpers
         window.showToast = (message, type = 'success') => {
@@ -286,59 +318,49 @@
             document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
             document.getElementById('view-videos').style.display = tab === 'videos' ? 'block' : 'none';
 
-            // IMPORTANT: Leaflet requires a resize check when a hidden map becomes visible
             if(tab === 'map') {
                 if(!liveMap) initMap();
                 setTimeout(() => { if(liveMap) liveMap.invalidateSize(); }, 100);
             }
         };
 
-        // Initialize Interactive Map
         function initMap() {
-            // Center roughly on central UK
             liveMap = L.map('uk-radar-map').setView([53.4808, -2.2426], 6);
-
-            // Using free OpenStreetMap tiles with CSS inversion for permanent dark mode (No API Keys needed!)
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(liveMap);
-
-            // Add demo markers for visual effect if no real ones exist yet
-            addMapPin(53.4084, -2.9916, "Adam Green", "SMYTHS - Bromborough", "Hot wheels boulevard set");
-            addMapPin(51.5072, -0.1276, "DiecastDave", "Entertainer, London", "New Mainlines");
         }
 
-        // Helper to add pins to map
         function addMapPin(lat, lng, username, locationStr, carStr) {
             if(!liveMap) return;
-            
-            // Custom glowing HTML marker
             const radarIcon = L.divIcon({
                 className: 'custom-radar-icon',
-                html: `
-                    <div class="relative flex h-4 w-4">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-4 w-4 bg-radar-primary border border-white"></span>
-                    </div>
-                `,
+                html: `<div class="relative flex h-4 w-4"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span><span class="relative inline-flex rounded-full h-4 w-4 bg-radar-primary border border-white"></span></div>`,
                 iconSize: [16, 16],
                 iconAnchor: [8, 8]
             });
-
             const marker = L.marker([lat, lng], {icon: radarIcon}).addTo(liveMap);
-            
-            // Popup styling
-            marker.bindPopup(`
-                <div class="text-xs font-sans">
-                    <div class="font-bold text-black border-b pb-1 mb-1">${locationStr}</div>
-                    <div class="text-gray-700">${carStr}</div>
-                    <div class="text-gray-400 italic text-[9px] mt-1">Found by ${username}</div>
-                </div>
-            `);
+            marker.bindPopup(`<div class="text-xs font-sans"><div class="font-bold text-black border-b pb-1 mb-1">${locationStr}</div><div class="text-gray-700">${carStr}</div><div class="text-gray-400 italic text-[9px] mt-1">Found by ${username}</div></div>`);
         }
 
-        // Google Secure Auth Logic
+        // --- Garage Logic ---
+        window.openGarage = () => {
+            for(let i=1; i<=5; i++) {
+                document.getElementById(`iso-${i}`).value = localStorage.getItem(`iso-${i}`) || '';
+            }
+            openModal('garage-modal');
+        };
+
+        window.saveGarage = () => {
+            for(let i=1; i<=5; i++) {
+                localStorage.setItem(`iso-${i}`, document.getElementById(`iso-${i}`).value.trim());
+            }
+            closeModal('garage-modal');
+            showToast("Garage saved! Your #1 Grail is active.");
+        };
+
+        // --- Google Auth ---
         window.toggleAuth = () => {
             if (!isFirebaseConfigured) {
                 showToast("Firebase keys missing. Please add them back to the code!", "error");
@@ -349,9 +371,7 @@
                     signOut(auth).then(() => showToast("Signed out successfully."));
                 }
             } else {
-                signInWithPopup(auth, provider).catch((error) => {
-                    showToast(error.message, "error");
-                });
+                signInWithPopup(auth, provider).catch((error) => showToast(error.message, "error"));
             }
         };
 
@@ -363,11 +383,10 @@
             openModal('transmit-modal');
         };
 
-        // Image Compression Logic
+        // --- Image Compression ---
         window.previewImage = (event) => {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -375,7 +394,6 @@
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 600; 
                     const scaleSize = MAX_WIDTH / img.width;
-                    
                     if (scaleSize < 1) {
                         canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scaleSize;
@@ -383,10 +401,8 @@
                         canvas.width = img.width;
                         canvas.height = img.height;
                     }
-                    
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
                     currentImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     
                     document.getElementById('photo-preview').src = currentImageBase64;
@@ -399,7 +415,7 @@
             reader.readAsDataURL(file);
         };
 
-        // Submit Post + GPS Location
+        // --- Transmit Post ---
         window.submitPost = async () => {
             const btn = document.getElementById('submit-btn');
             const locationStr = document.getElementById('post-location').value.trim();
@@ -410,6 +426,9 @@
             const avatarUrl = currentUser ? currentUser.photoURL : "";
             const uid = currentUser ? currentUser.uid : "anonymous";
 
+            // Pull the user's #1 Grail from their Garage storage
+            const topGrail = localStorage.getItem('iso-1') || '';
+
             if(!locationStr || !car) { showToast("Store and Car are required!", "error"); return; }
 
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ACQUIRING GPS...';
@@ -418,10 +437,10 @@
             const postData = {
                 username, avatarUrl, uid, location: locationStr, car, intel,
                 imageBase64: currentImageBase64,
+                grail: topGrail, // Attach the grail!
                 timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
             };
 
-            // Attempt to grab physical GPS coords to plot on map
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
@@ -430,11 +449,10 @@
                         finalizePost(postData, btn);
                     },
                     async (error) => {
-                        // User denied GPS or it failed, post anyway without map pin
-                        console.warn("GPS failed, transmitting without exact pin", error);
+                        console.warn("GPS failed", error);
                         finalizePost(postData, btn);
                     },
-                    { timeout: 5000 } // Give up on GPS after 5 seconds to not freeze app
+                    { timeout: 5000 }
                 );
             } else {
                 finalizePost(postData, btn);
@@ -448,8 +466,7 @@
                     await addDoc(postsRef, postData);
                     resetForm(btn);
                 } catch (e) { 
-                    showToast("Error saving. Image might be too large.", "error"); 
-                    console.error(e);
+                    showToast("Error saving.", "error"); 
                     btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
                     btn.disabled = false;
                 }
@@ -468,15 +485,13 @@
             document.getElementById('photo-icon').classList.remove('hidden');
             document.getElementById('photo-text').textContent = "Tap to snap a photo";
             currentImageBase64 = null; 
-            
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
             btn.disabled = false;
-
             closeModal('transmit-modal');
             showToast("Intel transmitted successfully!");
         }
 
-        // Render Feed Posts
+        // --- Render Feed ---
         function renderPost(data, prepend = false) {
             const feed = document.getElementById('feed-container');
             const post = document.createElement('div');
@@ -495,14 +510,22 @@
             const imageHTML = data.imageBase64 
                 ? `<img src="${data.imageBase64}" class="w-full h-48 object-cover rounded-lg mb-4 border border-slate-700 shadow-sm" alt="Stock Photo">` 
                 : '';
+                
+            // Construct the Grail/ISO tag if the user has one attached to the post
+            const grailHTML = data.grail 
+                ? `<div class="text-[10px] text-radar-primary font-bold mt-1 tracking-wide"><i class="fas fa-bullseye"></i> ISO: ${data.grail}</div>`
+                : '';
 
             post.innerHTML = `
                 <div class="flex items-center gap-3 mb-3">
                     ${avatarHTML}
                     <div class="flex-1">
-                        <div class="text-white font-bold">${data.username || 'Anonymous'}</div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <i class="fas fa-satellite-dish text-radar-primary text-[9px]"></i> ${timeString}
+                        <div class="text-white font-bold flex items-center gap-2">
+                            ${data.username || 'Anonymous'}
+                        </div>
+                        ${grailHTML}
+                        <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1 mt-1">
+                            <i class="fas fa-satellite-dish text-radar-primary"></i> ${timeString}
                         </div>
                     </div>
                 </div>
@@ -527,7 +550,7 @@
                         </button>
                     </div>
                     <button class="bg-[#450a0a]/50 border border-[#7f1d1d] text-[#fca5a5] px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold tracking-wider hover:bg-red-900 transition flex items-center gap-1.5">
-                        <i class="fas fa-ban"></i> PEGS EMPTY (0)
+                        <i class="fas fa-ban"></i> PEGS EMPTY
                     </button>
                 </div>
             `;
@@ -538,23 +561,19 @@
             postCount++;
             document.getElementById('post-count').textContent = `${postCount} Reports`;
 
-            // Auto-plot to map if coordinates exist in the db
-            if(data.lat && data.lng) {
-                addMapPin(data.lat, data.lng, data.username, data.location, data.car);
-            }
+            if(data.lat && data.lng) addMapPin(data.lat, data.lng, data.username, data.location, data.car);
         }
 
-        // Dual-Source Video Fetch: Lamley Group & Custom Collects
+        // --- Video Feed ---
         async function fetchDiecastNews() {
             const container = document.getElementById('view-videos');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
-            
             if (container.dataset.loaded === 'true') return; 
             
             try {
                 const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
-                const customCollectsUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=customcollects');
+                const customCollectsUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg'); 
                 
                 const [lamleyRes, customRes] = await Promise.all([
                     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
@@ -570,28 +589,13 @@
                 
                 if (videos.length === 0) throw new Error("Empty feeds");
                 
-                // Sort by Newest
                 videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
-                
                 renderVideos(videos.slice(0, 10));
 
             } catch(e) {
-                console.warn("Live fetch failed, deploying failsafe cache...", e);
                 const failsafeVideos = [
-                    { 
-                        title: "FINDING FRESH UNTOUCHED BOXES! HOT WHEELS HUNTING UK", 
-                        link: "https://www.youtube.com/watch?v=qjApk3Y7tpQ", 
-                        pubDate: new Date().toISOString(), 
-                        author: "Custom Collects", 
-                        thumbnail: "https://i.ytimg.com/vi/qjApk3Y7tpQ/maxresdefault.jpg" 
-                    },
-                    { 
-                        title: "Hot Wheels 2027 A Case Unboxing", 
-                        link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", 
-                        pubDate: new Date(Date.now() - 40000000).toISOString(), 
-                        author: "Lamley Group", 
-                        thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" 
-                    }
+                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
+                    { title: "Hot Wheels 2027 A Case Unboxing", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" }
                 ];
                 renderVideos(failsafeVideos);
             }
@@ -624,7 +628,7 @@
             }
         }
 
-        // Init
+        // --- Init ---
         window.onload = () => {
             fetchDiecastNews();
             
@@ -659,20 +663,17 @@
                 onSnapshot(q, (snapshot) => {
                     document.getElementById('feed-container').innerHTML = '';
                     postCount = 0; 
-                    
-                    // Clear existing markers to prevent duplicates on refresh
                     if(liveMap) {
                         liveMap.eachLayer((layer) => {
                             if (layer instanceof L.Marker) liveMap.removeLayer(layer);
                         });
                     }
-
                     snapshot.forEach((doc) => renderPost(doc.data()));
                 });
             } else {
                 setTimeout(() => {
-                    renderPost({ username: "Adam Green", location: "ALDI - MORETON", car: "Sierra Cosworth super treasure hunt", timestamp: new Date(Date.now() - 86400000) });
-                    renderPost({ username: "Adam Green", location: "SMYTHS TOYS - BROMBOROUGH", car: "Hot wheels boulevard set", intel: "Only a few fantasy cars left on the pegs", timestamp: new Date(Date.now() - 172800000) });
+                    renderPost({ username: "Adam Green", grail: "Matchbox Porsche 911", location: "ALDI - MORETON", car: "Sierra Cosworth super treasure hunt", timestamp: new Date(Date.now() - 86400000) });
+                    renderPost({ username: "DiecastDave", grail: "Boulevard Skyline", location: "SMYTHS TOYS - BROMBOROUGH", car: "Hot wheels boulevard set", intel: "Only a few fantasy cars left on the pegs", timestamp: new Date(Date.now() - 172800000) });
                 }, 500);
             }
         };
