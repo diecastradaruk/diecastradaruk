@@ -544,34 +544,54 @@
             }
         }
 
-        // Dual-Source Video Fetch
+        // Dual-Source Video Fetch: Lamley Group & Custom Collects
         async function fetchDiecastNews() {
             const container = document.getElementById('view-videos');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
+            
             if (container.dataset.loaded === 'true') return; 
             
             try {
                 const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
-                const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg');
+                const customCollectsUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=customcollects');
                 
-                const [lamleyRes, twcRes] = await Promise.all([
+                const [lamleyRes, customRes] = await Promise.all([
                     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`)
+                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${customCollectsUrl}`)
                 ]);
                 
                 let videos = [];
-                const lamleyData = await lamleyRes.json(); if(lamleyData?.items) videos = videos.concat(lamleyData.items);
-                const twcData = await twcRes.json(); if(twcData?.items) videos = videos.concat(twcData.items);
+                const lamleyData = await lamleyRes.json(); 
+                if(lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items);
+                
+                const customData = await customRes.json(); 
+                if(customData && customData.items) videos = videos.concat(customData.items);
                 
                 if (videos.length === 0) throw new Error("Empty feeds");
+                
+                // Sort by Newest
                 videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
+                
                 renderVideos(videos.slice(0, 10));
 
             } catch(e) {
+                console.warn("Live fetch failed, deploying failsafe cache...", e);
                 const failsafeVideos = [
-                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
-                    { title: "Hot Wheels 2027 A Case Unboxing", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" }
+                    { 
+                        title: "FINDING FRESH UNTOUCHED BOXES! HOT WHEELS HUNTING UK", 
+                        link: "https://www.youtube.com/watch?v=qjApk3Y7tpQ", 
+                        pubDate: new Date().toISOString(), 
+                        author: "Custom Collects", 
+                        thumbnail: "https://i.ytimg.com/vi/qjApk3Y7tpQ/maxresdefault.jpg" 
+                    },
+                    { 
+                        title: "Hot Wheels 2027 A Case Unboxing", 
+                        link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", 
+                        pubDate: new Date(Date.now() - 40000000).toISOString(), 
+                        author: "Lamley Group", 
+                        thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" 
+                    }
                 ];
                 renderVideos(failsafeVideos);
             }
