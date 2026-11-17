@@ -4,289 +4,382 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Diecast Radar UK</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b1120">
     
-    <!-- FontAwesome & Tailwind -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS for Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Leaflet.js for Interactive Maps -->
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet JS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
+    <!-- Tailwind Config for Custom Colors -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         radar: {
-                            bg: '#050b14',        
-                            panel: '#0f1623',     
-                            primary: '#10b981',   
-                            cyan: '#06b6d4',      
-                            accent: '#1e293b'     
+                            dark: '#050510',
+                            panel: '#0b1120',
+                            cyan: '#22c55e', // Changed to the neon green from the logo
+                            accent: '#10b981'
                         }
                     },
                     fontFamily: {
-                        sans: ['Segoe UI', 'system-ui', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
                     }
                 }
             }
         }
     </script>
+
     <style>
-        body { background-color: #050b14; color: #f8fafc; overflow-x: hidden; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { scrollbar-width: none; }
+        body {
+            background-color: #050510;
+            color: #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
-            z-index: 999; padding: 20px; backdrop-filter: blur(4px);
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        
+        /* Original Spinning Radar Logo Animation */
+        .radar-logo-container {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34,197,94,0.2) 0%, rgba(5,5,16,1) 100%);
+            border: 1px solid #22c55e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(34,197,94,0.3);
         }
 
-        /* Toasts */
-        #toast-container { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
-        .toast { background: #111827; border-left: 4px solid #10b981; color: white; padding: 12px 16px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: bold; animation: slideDown 0.3s ease-out; }
-        .toast.error { border-left-color: #ef4444; }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(45deg, rgba(34,197,94,0) 0%, rgba(34,197,94,0.8) 100%);
+            transform-origin: 0% 0%;
+            animation: sweep 3s infinite linear;
+        }
 
-        /* Custom Map Radar Ping */
-        .custom-radar-icon { position: relative; }
-        
-        /* Dark Mode Map CSS Trick */
+        .radar-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px dashed rgba(34,197,94,0.3);
+        }
+
+        .radar-car {
+            position: relative;
+            z-index: 10;
+            color: #fff;
+            font-size: 14px;
+            text-shadow: 0 0 5px #22c55e;
+        }
+
+        @keyframes sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* OpenStreetMap Dark Mode Inversion Fix */
         .leaflet-tile {
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+        }
+        
+        /* Map pulsing dot */
+        .gps-pulse {
+            width: 16px;
+            height: 16px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(34,197,94, 0.7);
+            animation: pulse-ring 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+            border: 2px solid #fff;
+        }
+        @keyframes pulse-ring {
+            to { box-shadow: 0 0 0 15px rgba(34,197,94, 0); }
+        }
+        
+        /* Image Preview styling */
+        #image-preview-container {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 150px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        #image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #remove-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="pb-24">
+<body class="antialiased selection:bg-radar-cyan selection:text-black">
 
-    <!-- Header -->
-    <header class="bg-radar-panel border-b border-radar-primary shadow-[0_4px_15px_rgba(16,185,129,0.2)] sticky top-0 z-50 flex justify-between items-center px-4 py-3">
-        <div class="flex items-center gap-2">
-            <!-- Spinning Radar Car Logo -->
-            <div class="relative w-9 h-9 rounded-full border border-radar-primary/50 bg-[#050b14] overflow-hidden flex items-center justify-center shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-                <div class="absolute inset-0 border-2 border-radar-primary/20 rounded-full"></div>
-                <!-- Radar sweep -->
-                <div class="absolute w-full h-full bg-gradient-to-tr from-transparent via-radar-primary/40 to-transparent animate-spin" style="animation-duration: 3s;"></div>
-                <!-- Crosshairs -->
-                <div class="absolute w-full h-[1px] bg-radar-primary/40"></div>
-                <div class="absolute h-full w-[1px] bg-radar-primary/40"></div>
-                <!-- Car Icon -->
-                <i class="fas fa-car-side text-radar-cyan text-xs relative z-10 drop-shadow-[0_0_3px_#06b6d4]"></i>
+    <!-- Top Navigation Bar -->
+    <header class="bg-radar-panel border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="radar-logo-container">
+                    <div class="radar-grid"></div>
+                    <div class="radar-sweep"></div>
+                    <i class="fas fa-car-side radar-car"></i>
+                </div>
+                <div class="font-bold text-sm tracking-widest uppercase">
+                    <span class="text-white">Diecast </span><span class="text-radar-cyan">Radar</span> <span class="text-[10px] text-slate-500">UK</span>
+                </div>
             </div>
-
-            <div class="font-black italic text-lg tracking-wider">
-                <span class="text-white">DIECAST</span> 
-                <span class="text-radar-cyan">RADAR</span> 
-                <span class="text-radar-primary text-sm tracking-normal font-bold">UK</span>
+            
+            <div class="flex items-center gap-3">
+                <button id="garage-btn" class="text-slate-400 hover:text-radar-cyan transition flex flex-col items-center" onclick="openGarageModal()">
+                    <i class="fas fa-warehouse text-sm"></i>
+                </button>
+                <div id="user-profile" class="hidden items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-slate-800">
+                    <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700">
+                    <span id="user-name" class="text-xs font-bold text-slate-300"></span>
+                </div>
+                <button id="login-btn" class="bg-radar-cyan/10 text-radar-cyan border border-radar-cyan/30 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider hover:bg-radar-cyan/20 transition">
+                    LOGIN
+                </button>
             </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            <!-- Google Auth Button -->
-            <button id="auth-btn" onclick="toggleAuth()" class="flex items-center gap-2 bg-black/40 border border-slate-700 rounded-full px-3 py-1 hover:bg-black/60 transition">
-                <img id="header-avatar" class="w-5 h-5 rounded-full hidden border border-radar-primary object-cover" src="" alt="Avatar">
-                <div id="header-icon" class="w-5 h-5 rounded-full bg-slate-800 border border-radar-primary flex items-center justify-center text-radar-primary text-[10px] font-bold"><i class="fas fa-user"></i></div>
-                <span class="text-sm font-bold text-slate-200" id="header-username">Sign In</span>
-            </button>
-            
-            <!-- Garage Button -->
-            <button onclick="openGarage()" class="flex items-center gap-2 bg-radar-accent border border-slate-700 rounded-full px-3 py-1 hover:bg-slate-700 transition">
-                <i class="fas fa-warehouse text-radar-primary text-sm"></i>
-                <span class="text-xs font-bold text-slate-300 hidden sm:inline">Garage</span>
-            </button>
-            
-            <button onclick="openTransmit()" class="hidden md:flex items-center gap-2 bg-radar-primary text-black px-4 py-2 rounded-lg font-black text-sm hover:bg-green-400 transition shadow-[0_0_10px_rgba(16,185,129,0.4)]">
-                <i class="fas fa-camera"></i> REPORT STOCK
-            </button>
         </div>
     </header>
 
-    <!-- Main Content Wrapper -->
-    <div class="max-w-4xl mx-auto px-4 pt-5">
+    <!-- Main Content Area -->
+    <main class="max-w-md mx-auto w-full px-4 pt-4 pb-24 space-y-4 custom-scrollbar">
         
-        <!-- Daily Diecast Intel (Fun Fact) -->
-        <div class="bg-radar-panel border border-slate-800 rounded-xl p-3 mb-4 flex items-start gap-3 shadow-md">
-            <div class="bg-radar-primary/10 p-2 rounded-lg text-radar-primary mt-0.5">
-                <i class="fas fa-lightbulb"></i>
-            </div>
+        <!-- 1. Daily Intel Fact -->
+        <div id="daily-fact-container" class="bg-black/40 border border-radar-cyan/20 p-3 rounded-lg flex items-start gap-3 shadow-lg shadow-radar-cyan/5">
+            <i class="fas fa-lightbulb text-radar-cyan text-xl mt-0.5 animate-pulse"></i>
             <div>
-                <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-1">Daily Intel</h4>
-                <p id="daily-fact-text" class="text-slate-400 text-xs leading-relaxed italic">Loading intel...</p>
+                <h3 class="text-[10px] font-bold text-radar-cyan uppercase tracking-wider mb-1">Daily Intel</h3>
+                <p id="daily-fact-text" class="text-xs text-slate-300 font-medium leading-snug"></p>
             </div>
         </div>
 
-        <!-- Sleek Whatnot Referral Link -->
-        <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="flex justify-center items-center gap-2 bg-radar-panel border border-slate-800 rounded-xl p-3 mb-5 text-xs font-bold text-slate-400 hover:text-white hover:border-radar-primary transition shadow-sm">
-            <i class="fas fa-gift text-radar-primary"></i> Get a Free £10 to Spend on Whatnot!
+        <!-- 2. Whatnot Referral Link -->
+        <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="block w-full bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded-lg p-3 flex items-center justify-between transition-all hover:bg-yellow-500/20">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-gift text-yellow-500 text-lg drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]"></i>
+                <div>
+                    <div class="text-yellow-400 font-bold text-sm tracking-wide">Claim Your Free £10!</div>
+                    <div class="text-yellow-200/60 text-[10px] uppercase tracking-wider mt-0.5">Sign up to Whatnot via this link</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-yellow-500/50 text-sm"></i>
         </a>
 
-        <!-- Navigation Tabs -->
-        <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800 relative z-40 shadow-sm">
-            <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md">
-                <i class="fas fa-list"></i> FEED
+        <!-- 3. Navigation Tabs -->
+        <div class="flex rounded-lg overflow-hidden border border-slate-700 bg-black/50 p-1 gap-1">
+            <button onclick="switchTab('feed')" id="tab-feed" class="flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all">
+                <i class="fas fa-list-ul mr-1"></i> FEED
             </button>
-            <button id="tab-btn-map" onclick="switchTab('map')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all">
-                <i class="fas fa-map"></i> MAP
+            <button onclick="switchTab('map')" id="tab-map" class="flex-1 py-2 text-xs font-bold tracking-wider rounded-md text-slate-400 hover:text-white transition-all">
+                <i class="fas fa-map mr-1"></i> MAP
             </button>
-            <button id="tab-btn-videos" onclick="switchTab('videos')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all">
-                <i class="fab fa-youtube text-red-500"></i> VIDEOS
+            <button onclick="switchTab('videos')" id="tab-videos" class="flex-1 py-2 text-xs font-bold tracking-wider rounded-md text-slate-400 hover:text-white transition-all">
+                <i class="fab fa-youtube mr-1 text-red-500"></i> VIDEOS
             </button>
         </div>
 
-        <!-- VIEW: FEED -->
-        <div id="view-feed" class="block">
+        <!-- 4. Search Bar -->
+        <div id="search-container" class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500"></i>
+            <input type="text" id="search-input" placeholder="Search by car, store, or city..." class="w-full bg-black/60 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-radar-cyan focus:ring-1 focus:ring-radar-cyan transition-all text-sm">
+        </div>
+
+        <!-- 5. Radar Active Status -->
+        <div class="flex items-center justify-between bg-radar-panel border border-slate-800 rounded-lg p-3">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-radar-cyan animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                <span class="text-xs font-bold text-radar-cyan tracking-wider uppercase">Radar Active</span>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">
+                <i class="fas fa-satellite-dish mr-1"></i> Scanning UK
+            </div>
+        </div>
+
+        <!-- 6. Intel Feeds (The Views) -->
+        
+        <!-- Feed View -->
+        <div id="view-feed" class="space-y-4">
+            <div id="feed-list" class="space-y-4 pb-4">
+                <!-- Posts will be generated here by JS -->
+            </div>
+        </div>
+
+        <!-- Map View -->
+        <div id="view-map" class="hidden h-[500px] rounded-xl overflow-hidden border border-slate-700 relative shadow-lg">
+            <div id="map" class="w-full h-full bg-[#050510]"></div>
+            <div class="absolute bottom-4 left-4 z-[400] bg-black/80 border border-radar-cyan/30 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                <div class="w-2 h-2 rounded-full bg-radar-cyan animate-pulse"></div>
+                <span class="text-[10px] font-bold text-radar-cyan tracking-wider uppercase">Live Tracking</span>
+            </div>
+        </div>
+
+        <!-- Videos View -->
+        <div id="view-videos" class="hidden space-y-4" data-loaded="false">
+            <div id="news-loading" class="text-center py-8">
+                <i class="fas fa-circle-notch fa-spin text-radar-cyan text-3xl mb-3"></i>
+                <p class="text-slate-400 text-xs font-mono tracking-widest uppercase">Intercepting Transmissions...</p>
+            </div>
+            <div id="news-feed-list" class="grid grid-cols-1 gap-4">
+                <!-- YouTube videos will inject here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Floating Action Button (Report Stock) -->
+    <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4 flex justify-center pointer-events-none">
+        <button onclick="openModal()" class="pointer-events-auto bg-radar-cyan text-black px-6 py-3.5 rounded-full font-bold text-sm tracking-wider uppercase shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:scale-105 hover:bg-green-400 transition-all flex items-center gap-2 border-2 border-black">
+            <i class="fas fa-crosshairs"></i> Report Stock
+        </button>
+    </div>
+
+    <!-- TRANSMIT INTEL MODAL -->
+    <div id="report-modal" class="fixed inset-0 bg-black/90 z-[100] hidden items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-radar-panel w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-800 p-5 transform transition-transform translate-y-full" id="modal-content">
             
-            <!-- Search & Filters -->
-            <div class="bg-radar-panel rounded-xl border border-slate-800 p-4 mb-4 shadow-sm">
-                <input type="text" placeholder="Search town, store, or car..." class="w-full bg-[#050b14] border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary mb-3">
-                <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                    <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🔥 Treasure Hunt</button>
-                    <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🎯 Smyths Toys</button>
-                    <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🚙 Boulevard</button>
-                    <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">✖ Clear</button>
-                </div>
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-lg font-bold text-white uppercase tracking-wider"><i class="fas fa-satellite-dish text-radar-cyan mr-2"></i> Transmit Intel</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
-            <!-- Radar Status Bar -->
-            <div class="bg-radar-panel rounded-xl p-3 flex justify-between items-center mb-5 border border-slate-800 shadow-sm">
-                <div class="flex items-center gap-2 text-radar-primary font-bold text-sm tracking-widest uppercase">
-                    <span class="relative flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-radar-primary"></span>
-                    </span>
-                    Radar Active
+            
+            <form id="report-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5 tracking-wider uppercase">Store Location</label>
+                    <div class="relative">
+                        <i class="fas fa-store absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" id="store-name" required placeholder="e.g. Smyths Toys, Manchester" class="w-full bg-black border border-slate-700 rounded-lg py-2.5 pl-10 pr-3 text-white text-sm focus:border-radar-cyan focus:ring-1 focus:ring-radar-cyan outline-none transition">
+                    </div>
                 </div>
-                <div class="text-slate-400 text-xs font-bold flex items-center gap-2">
-                    <i class="fas fa-list-ul"></i> <span id="post-count">Scanning...</span>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5 tracking-wider uppercase">What's on the pegs?</label>
+                    <textarea id="car-details" required placeholder="e.g. 2027 A Case just dropped, loads of Mainlines, missed the Super..." rows="3" class="w-full bg-black border border-slate-700 rounded-lg py-2.5 px-3 text-white text-sm focus:border-radar-cyan focus:ring-1 focus:ring-radar-cyan outline-none transition custom-scrollbar"></textarea>
                 </div>
-            </div>
-
-            <!-- Posts Container -->
-            <div id="feed-container" class="flex flex-col gap-4">
-                <!-- Posts rendered via JS -->
-            </div>
-        </div>
-
-        <!-- VIEW: MAP -->
-        <div id="view-map" class="hidden">
-            <div class="bg-radar-panel border border-slate-800 rounded-xl p-2 relative">
-                <!-- The Leaflet map container -->
-                <div id="uk-radar-map" class="w-full h-[60vh] rounded-lg bg-black z-10"></div>
-                <div class="absolute bottom-4 left-4 z-20 bg-black/80 border border-radar-primary px-3 py-1 rounded-md text-[10px] font-bold text-radar-primary tracking-widest uppercase flex items-center gap-2">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-radar-primary"></span>
-                    </span>
-                    Live Tracking
+                
+                <!-- Camera / Photo Upload Section -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5 tracking-wider uppercase">Visual Verification (Optional)</label>
+                    <div class="relative w-full border-2 border-dashed border-slate-700 rounded-lg bg-black hover:border-radar-cyan transition-colors group cursor-pointer" onclick="document.getElementById('photo-upload').click()">
+                        <div class="py-4 text-center">
+                            <i class="fas fa-camera text-2xl text-slate-500 group-hover:text-radar-cyan transition-colors mb-2"></i>
+                            <p class="text-xs text-slate-400 font-mono">Tap to snap a photo</p>
+                        </div>
+                        <input type="file" id="photo-upload" accept="image/*" capture="environment" class="hidden">
+                    </div>
+                    <div id="image-preview-container">
+                        <img id="image-preview" src="" alt="Preview">
+                        <div id="remove-image-btn" onclick="removePhoto(event)"><i class="fas fa-times text-xs"></i></div>
+                    </div>
+                    <!-- Hidden canvas for client-side image compression -->
+                    <canvas id="compression-canvas" class="hidden"></canvas>
                 </div>
-            </div>
-        </div>
 
-        <!-- VIEW: VIDEOS (YouTube Integration) -->
-        <div id="view-videos" class="hidden">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="news-feed-list">
-                <div id="news-loading" class="col-span-full text-center p-8 text-radar-cyan font-bold animate-pulse">Scanning video frequencies...</div>
-                <!-- Videos rendered via JS -->
-            </div>
-        </div>
-
-    </div> <!-- End Main Wrapper -->
-
-    <!-- Mobile FAB -->
-    <button onclick="openTransmit()" class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-radar-primary text-black px-6 py-3 rounded-full font-black text-sm flex items-center gap-2 shadow-[0_4px_15px_rgba(16,185,129,0.4)] z-40">
-        <i class="fas fa-camera"></i> REPORT STOCK
-    </button>
-
-    <!-- Toast Container -->
-    <div id="toast-container"></div>
-
-    <!-- Garage (ISO) Modal -->
-    <div class="modal-overlay" id="garage-modal">
-        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 relative">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-white font-bold text-lg"><i class="fas fa-warehouse text-radar-primary"></i> My Garage (ISO)</h2>
-                <i class="fas fa-times text-slate-400 cursor-pointer hover:text-white" onclick="closeModal('garage-modal')"></i>
-            </div>
-            <p class="text-xs text-slate-400 mb-4">List the top 5 cars you are hunting for. Your #1 Grail will appear on all your intel posts!</p>
-            <div class="space-y-3">
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-radar-primary font-black">#1</span>
-                    <input type="text" id="iso-1" placeholder="Your Top Grail..." class="w-full bg-[#050b14] border border-radar-primary rounded-lg pl-8 p-2 text-white focus:outline-none focus:ring-1 focus:ring-radar-primary font-bold">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" class="flex-1 bg-black border border-slate-700 text-slate-300 py-3 rounded-lg font-bold text-xs tracking-wider uppercase hover:bg-slate-800 transition" onclick="closeModal()">Abort</button>
+                    <button type="submit" class="flex-1 bg-radar-cyan text-black py-3 rounded-lg font-bold text-xs tracking-wider uppercase shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:bg-green-400 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Transmit
+                    </button>
                 </div>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#2</span>
-                    <input type="text" id="iso-2" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
-                </div>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#3</span>
-                    <input type="text" id="iso-3" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
-                </div>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#4</span>
-                    <input type="text" id="iso-4" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
-                </div>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-slate-500 font-black">#5</span>
-                    <input type="text" id="iso-5" placeholder="Wanted car..." class="w-full bg-[#050b14] border border-slate-700 rounded-lg pl-8 p-2 text-white focus:outline-none focus:border-slate-500 text-sm">
-                </div>
-            </div>
-            <button onclick="saveGarage()" class="w-full mt-5 bg-radar-primary text-black font-black py-3 rounded-lg hover:bg-green-400 transition shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-                SAVE GARAGE
-            </button>
+            </form>
         </div>
     </div>
 
-    <!-- Transmit Modal (With Camera) -->
-    <div class="modal-overlay" id="transmit-modal">
-        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar relative">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-white font-bold text-lg flex items-center gap-2"><i class="fas fa-satellite-dish text-radar-primary"></i> Transmit Intel</h2>
-                <i class="fas fa-times text-slate-400 cursor-pointer p-2 hover:text-white transition" onclick="closeModal('transmit-modal')"></i>
+    <!-- GARAGE / ISO MODAL -->
+    <div id="garage-modal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-radar-panel w-full max-w-md rounded-2xl border border-slate-800 p-5 shadow-2xl relative">
+            
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-white uppercase tracking-wider"><i class="fas fa-warehouse text-radar-cyan mr-2"></i> My Garage ISO</h2>
+                <button onclick="closeGarageModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
             
-            <div class="mb-3">
-                <label class="block text-xs font-bold text-slate-400 mb-1">Store & Location *</label>
-                <input type="text" id="post-location" placeholder="e.g. Smyths, Manchester" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
-            </div>
-            <div class="mb-3">
-                <label class="block text-xs font-bold text-slate-400 mb-1">Car or Series Found *</label>
-                <input type="text" id="post-car" placeholder="e.g. Boulevard Set" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
-            </div>
-            <div class="mb-3">
-                <label class="block text-xs font-bold text-slate-400 mb-1">Extra Intel (Optional)</label>
-                <input type="text" id="post-intel" placeholder="e.g. Only 2 left on front pegs" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
-            </div>
+            <p class="text-xs text-slate-400 mb-4 leading-relaxed">List your Top 5 most wanted cars. Slot #1 is your <span class="text-radar-cyan font-bold">Top Grail</span> and will attach to your radar posts to let the community know what to look out for!</p>
             
-            <!-- Photo Upload Section -->
-            <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-400 mb-1">Photo Evidence (Optional)</label>
-                <div class="relative w-full border-2 border-dashed border-slate-700 rounded-lg p-4 text-center bg-[#050b14] hover:border-radar-primary transition cursor-pointer" onclick="document.getElementById('post-image').click()">
-                    <i class="fas fa-camera text-2xl text-slate-500 mb-2" id="photo-icon"></i>
-                    <p class="text-xs text-slate-400 font-bold" id="photo-text">Tap to snap a photo</p>
-                    <img id="photo-preview" class="hidden mx-auto max-h-32 rounded mt-2 border border-slate-600 object-cover">
-                    <input type="file" id="post-image" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
+            <form id="garage-form" class="space-y-3">
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-radar-cyan font-bold text-sm">#1</span>
+                    <input type="text" id="iso-1" placeholder="Your Ultimate Grail..." class="w-full bg-black/60 border border-radar-cyan/50 rounded-lg py-2 pl-9 pr-3 text-white text-sm focus:outline-none focus:border-radar-cyan">
+                    <i class="fas fa-star absolute right-3 top-1/2 transform -translate-y-1/2 text-radar-cyan/50 text-xs"></i>
                 </div>
-            </div>
-            
-            <button onclick="submitPost()" id="submit-btn" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-green-400 transition flex items-center justify-center gap-2">
-                <i class="fas fa-paper-plane"></i> TRANSMIT
-            </button>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold text-sm">#2</span>
+                    <input type="text" id="iso-2" placeholder="Wanted..." class="w-full bg-black border border-slate-700 rounded-lg py-2 pl-9 pr-3 text-white text-sm focus:outline-none focus:border-slate-500">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold text-sm">#3</span>
+                    <input type="text" id="iso-3" placeholder="Wanted..." class="w-full bg-black border border-slate-700 rounded-lg py-2 pl-9 pr-3 text-white text-sm focus:outline-none focus:border-slate-500">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold text-sm">#4</span>
+                    <input type="text" id="iso-4" placeholder="Wanted..." class="w-full bg-black border border-slate-700 rounded-lg py-2 pl-9 pr-3 text-white text-sm focus:outline-none focus:border-slate-500">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold text-sm">#5</span>
+                    <input type="text" id="iso-5" placeholder="Wanted..." class="w-full bg-black border border-slate-700 rounded-lg py-2 pl-9 pr-3 text-white text-sm focus:outline-none focus:border-slate-500">
+                </div>
+                
+                <button type="submit" class="w-full mt-4 bg-slate-800 text-white border border-slate-600 py-3 rounded-lg font-bold text-xs tracking-wider uppercase hover:bg-slate-700 transition">
+                    Save Garage
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- Application Logic -->
+    <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // ==========================================
-        // PASTE YOUR FIREBASE CONFIG HERE
+        // PASTE YOUR FIREBASE CONFIG KEYS HERE!
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
@@ -298,311 +391,328 @@
   measurementId: "G-T05Y2L42L5"
         };
 
-        let db, auth, provider;
-        let postsRef;
-        const isFirebaseConfigured = !!firebaseConfig.apiKey;
-        let postCount = 0;
+        let app, db, auth;
         let currentUser = null;
-        let currentImageBase64 = null; 
+        let map, markers = [];
+        let uploadedBase64Image = null;
 
-        // Map Variables
-        let liveMap = null;
-
-        // --- Daily Fact Logic ---
-        const diecastFacts = [
-            "Hot Wheels were introduced by Mattel in 1968 with the original 'Sweet 16' models.",
-            "The most expensive Hot Wheels ever sold is the 1969 Pink Rear-Loading Volkswagen Beach Bomb, valued over $150,000.",
-            "Matchbox cars got their name because the original toys were designed to fit inside a matchbox so children could take them to school.",
-            "Over 6 billion Hot Wheels have been produced since 1968. There are more Hot Wheels than real cars in the world!",
-            "Super Treasure Hunts (STH) were introduced in 2007, featuring Spectraflame paint and Real Riders (rubber tires).",
-            "The iconic Hot Wheels orange track was chosen because children gravitated towards the bright, exciting color during early testing.",
-            "Larry Wood, one of the most famous Hot Wheels designers, worked at Mattel for 40 years and is known as 'Mr. Hot Wheels'.",
-            "The 1967 Custom Camaro was the very first Hot Wheels car ever released to the public.",
-            "Treasure Hunts were first introduced by Hot Wheels in 1995 with a limited production run of 10,000 pieces per vehicle.",
-            "Lesney Products, the original maker of Matchbox, started out making industrial diecast parts before switching to toys."
-        ];
-
-        function loadDailyFact() {
-            // Get the current day of the year to rotate the fact daily
-            const today = new Date();
-            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-            const factIndex = dayOfYear % diecastFacts.length;
-            document.getElementById('daily-fact-text').textContent = `"${diecastFacts[factIndex]}"`;
+        // Initialize Firebase safely
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setupAuth();
+                loadFeed();
+            } else {
+                console.log("Firebase not configured. Running UI in demo mode.");
+                renderDemoFeed();
+            }
+        } catch(e) {
+            console.error("Firebase init error:", e);
+            renderDemoFeed();
         }
 
-        // UI Helpers
-        window.showToast = (message, type = 'success') => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
-            toast.innerHTML = type === 'error' ? `<i class="fas fa-exclamation-triangle"></i> ${message}` : `<i class="fas fa-check-circle"></i> ${message}`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3500);
-        };
-        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+        // --- AUTHENTICATION ---
+        function setupAuth() {
+            const loginBtn = document.getElementById('login-btn');
+            const profileDiv = document.getElementById('user-profile');
+            const avatarImg = document.getElementById('user-avatar');
+            const nameSpan = document.getElementById('user-name');
+            const provider = new GoogleAuthProvider();
 
-        // Tab Switching & Map Initialization
-        window.switchTab = (tab) => {
-            const btns = ['feed', 'map', 'videos'];
-            btns.forEach(b => {
-                const el = document.getElementById(`tab-btn-${b}`);
-                if(b === tab) {
-                    el.className = "flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md";
+            loginBtn.addEventListener('click', () => {
+                signInWithPopup(auth, provider).catch(error => console.error("Login failed", error));
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    loginBtn.classList.add('hidden');
+                    profileDiv.classList.remove('hidden');
+                    profileDiv.classList.add('flex');
+                    avatarImg.src = user.photoURL;
+                    nameSpan.textContent = user.displayName.split(' ')[0]; 
                 } else {
-                    el.className = "flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all";
+                    currentUser = null;
+                    loginBtn.classList.remove('hidden');
+                    profileDiv.classList.add('hidden');
+                    profileDiv.classList.remove('flex');
                 }
             });
-            document.getElementById('view-feed').style.display = tab === 'feed' ? 'block' : 'none';
-            document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
-            document.getElementById('view-videos').style.display = tab === 'videos' ? 'block' : 'none';
-
-            if(tab === 'map') {
-                if(!liveMap) initMap();
-                setTimeout(() => { if(liveMap) liveMap.invalidateSize(); }, 100);
-            }
-        };
-
-        function initMap() {
-            liveMap = L.map('uk-radar-map').setView([53.4808, -2.2426], 6);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(liveMap);
         }
 
-        function addMapPin(lat, lng, username, locationStr, carStr) {
-            if(!liveMap) return;
-            const radarIcon = L.divIcon({
-                className: 'custom-radar-icon',
-                html: `<div class="relative flex h-4 w-4"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span><span class="relative inline-flex rounded-full h-4 w-4 bg-radar-primary border border-white"></span></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
+        // --- MAP INIT ---
+        window.initMap = function() {
+            if (map) return;
+            map = L.map('map', { zoomControl: false }).setView([52.5, -1.5], 6); // Center of UK
+            L.control.zoom({ position: 'topleft' }).addTo(map);
+
+            // OpenStreetMap tile layer (inverted by CSS for dark mode)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // --- UI & TAB SWITCHING ---
+        window.switchTab = function(tabName) {
+            const feedTab = document.getElementById('tab-feed');
+            const mapTab = document.getElementById('tab-map');
+            const videosTab = document.getElementById('tab-videos');
+            const viewFeed = document.getElementById('view-feed');
+            const viewMap = document.getElementById('view-map');
+            const viewVideos = document.getElementById('view-videos');
+
+            // Reset all styles
+            [feedTab, mapTab, videosTab].forEach(t => {
+                t.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md text-slate-400 hover:text-white transition-all";
             });
-            const marker = L.marker([lat, lng], {icon: radarIcon}).addTo(liveMap);
-            marker.bindPopup(`<div class="text-xs font-sans"><div class="font-bold text-black border-b pb-1 mb-1">${locationStr}</div><div class="text-gray-700">${carStr}</div><div class="text-gray-400 italic text-[9px] mt-1">Found by ${username}</div></div>`);
+            [viewFeed, viewMap, viewVideos].forEach(v => v.classList.add('hidden'));
+
+            // Activate chosen tab
+            if (tabName === 'feed') {
+                feedTab.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
+                viewFeed.classList.remove('hidden');
+            } else if (tabName === 'map') {
+                mapTab.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
+                viewMap.classList.remove('hidden');
+                initMap();
+                setTimeout(() => map.invalidateSize(), 100);
+            } else if (tabName === 'videos') {
+                videosTab.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
+                viewVideos.classList.remove('hidden');
+                fetchDiecastNews();
+            }
         }
 
-        // --- Garage Logic ---
-        window.openGarage = () => {
-            for(let i=1; i<=5; i++) {
-                document.getElementById(`iso-${i}`).value = localStorage.getItem(`iso-${i}`) || '';
-            }
-            openModal('garage-modal');
-        };
-
-        window.saveGarage = () => {
-            for(let i=1; i<=5; i++) {
-                localStorage.setItem(`iso-${i}`, document.getElementById(`iso-${i}`).value.trim());
-            }
-            closeModal('garage-modal');
-            showToast("Garage saved! Your #1 Grail is active.");
-        };
-
-        // --- Google Auth ---
-        window.toggleAuth = () => {
-            if (!isFirebaseConfigured) {
-                showToast("Firebase keys missing. Please add them back to the code!", "error");
+        // --- MODAL CONTROLS ---
+        window.openModal = function() {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY" && !currentUser) {
+                alert("Please Login to Transmit Intel!");
                 return;
             }
-            if (currentUser) {
-                if (confirm("Sign out of Diecast Radar?")) {
-                    signOut(auth).then(() => showToast("Signed out successfully."));
-                }
-            } else {
-                signInWithPopup(auth, provider).catch((error) => showToast(error.message, "error"));
-            }
-        };
+            const modal = document.getElementById('report-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Small timeout to allow display:flex to apply before translating
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
 
-        window.openTransmit = () => {
-            if (!currentUser && isFirebaseConfigured) {
-                showToast("Please sign in with Google to transmit intel.", "error");
-                return;
-            }
-            openModal('transmit-modal');
-        };
+        window.closeModal = function() {
+            const modal = document.getElementById('report-modal');
+            const content = document.getElementById('modal-content');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('report-form').reset();
+                window.removePhoto(new Event('click')); // Reset photo
+            }, 300);
+        }
 
-        // --- Image Compression ---
-        window.previewImage = (event) => {
-            const file = event.target.files[0];
+        // --- PHOTO UPLOAD & COMPRESSION ---
+        document.getElementById('photo-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = function(event) {
                 const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600; 
-                    const scaleSize = MAX_WIDTH / img.width;
-                    if (scaleSize < 1) {
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
+                img.onload = function() {
+                    const canvas = document.getElementById('compression-canvas');
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    currentImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     
-                    document.getElementById('photo-preview').src = currentImageBase64;
-                    document.getElementById('photo-preview').classList.remove('hidden');
-                    document.getElementById('photo-icon').classList.add('hidden');
-                    document.getElementById('photo-text').textContent = "Photo attached! Tap to change.";
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        };
-
-        // --- Transmit Post ---
-        window.submitPost = async () => {
-            const btn = document.getElementById('submit-btn');
-            const locationStr = document.getElementById('post-location').value.trim();
-            const car = document.getElementById('post-car').value.trim();
-            const intel = document.getElementById('post-intel').value.trim();
-            
-            const username = currentUser ? currentUser.displayName.split(' ')[0] : "Hunter";
-            const avatarUrl = currentUser ? currentUser.photoURL : "";
-            const uid = currentUser ? currentUser.uid : "anonymous";
-
-            // Pull the user's #1 Grail from their Garage storage
-            const topGrail = localStorage.getItem('iso-1') || '';
-
-            if(!locationStr || !car) { showToast("Store and Car are required!", "error"); return; }
-
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ACQUIRING GPS...';
-            btn.disabled = true;
-
-            const postData = {
-                username, avatarUrl, uid, location: locationStr, car, intel,
-                imageBase64: currentImageBase64,
-                grail: topGrail, // Attach the grail!
-                timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
-            };
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        postData.lat = position.coords.latitude;
-                        postData.lng = position.coords.longitude;
-                        finalizePost(postData, btn);
-                    },
-                    async (error) => {
-                        console.warn("GPS failed", error);
-                        finalizePost(postData, btn);
-                    },
-                    { timeout: 5000 }
-                );
-            } else {
-                finalizePost(postData, btn);
-            }
-        };
-
-        async function finalizePost(postData, btn) {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRANSMITTING...';
-            if (isFirebaseConfigured) {
-                try {
-                    await addDoc(postsRef, postData);
-                    resetForm(btn);
-                } catch (e) { 
-                    showToast("Error saving.", "error"); 
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
-                    btn.disabled = false;
+                    // Compress to max 800px width
+                    const MAX_WIDTH = 800;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height *= MAX_WIDTH / width));
+                        width = MAX_WIDTH;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert back to base64 (JPEG, 0.7 quality)
+                    uploadedBase64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Show preview
+                    document.getElementById('image-preview').src = uploadedBase64Image;
+                    document.getElementById('image-preview-container').style.display = 'block';
                 }
-            } else {
-                renderPost(postData, true);
-                if(postData.lat) addMapPin(postData.lat, postData.lng, postData.username, postData.location, postData.car);
-                resetForm(btn);
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
+        window.removePhoto = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadedBase64Image = null;
+            document.getElementById('photo-upload').value = '';
+            document.getElementById('image-preview').src = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+        }
+
+        // --- GARAGE (ISO) LOGIC ---
+        window.openGarageModal = function() {
+            const modal = document.getElementById('garage-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Load saved data from localStorage
+            for(let i=1; i<=5; i++) {
+                const saved = localStorage.getItem(`iso-${i}`);
+                if(saved) document.getElementById(`iso-${i}`).value = saved;
             }
         }
-
-        function resetForm(btn) {
-            ['post-location','post-car','post-intel'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('post-image').value = ''; 
-            document.getElementById('photo-preview').classList.add('hidden');
-            document.getElementById('photo-preview').src = '';
-            document.getElementById('photo-icon').classList.remove('hidden');
-            document.getElementById('photo-text').textContent = "Tap to snap a photo";
-            currentImageBase64 = null; 
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
-            btn.disabled = false;
-            closeModal('transmit-modal');
-            showToast("Intel transmitted successfully!");
+        
+        window.closeGarageModal = function() {
+            const modal = document.getElementById('garage-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        // --- Render Feed ---
-        function renderPost(data, prepend = false) {
-            const feed = document.getElementById('feed-container');
-            const post = document.createElement('div');
-            
-            post.className = 'bg-radar-panel border border-slate-800 rounded-xl border-l-4 border-l-radar-primary p-4 shadow-lg mb-4';
-            
-            let timeString = "JUST NOW";
-            if (data.timestamp && data.timestamp.toDate) {
-                timeString = data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}).toUpperCase();
+        document.getElementById('garage-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            for(let i=1; i<=5; i++) {
+                localStorage.setItem(`iso-${i}`, document.getElementById(`iso-${i}`).value);
             }
-            
-            let avatarHTML = data.avatarUrl 
-                ? `<img src="${data.avatarUrl}" class="w-10 h-10 rounded-full border border-radar-primary object-cover shadow-[0_0_8px_rgba(16,185,129,0.3)]">` 
-                : `<div class="w-10 h-10 rounded-full border border-radar-primary flex items-center justify-center bg-black font-bold text-lg text-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.3)]">${(data.username || 'U').charAt(0).toUpperCase()}</div>`;
+            closeGarageModal();
+            // Show brief success alert
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "SAVED!";
+            btn.classList.add('bg-radar-cyan', 'text-black');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-radar-cyan', 'text-black');
+            }, 1500);
+        });
 
-            const imageHTML = data.imageBase64 
-                ? `<img src="${data.imageBase64}" class="w-full h-48 object-cover rounded-lg mb-4 border border-slate-700 shadow-sm" alt="Stock Photo">` 
-                : '';
+        // --- SUBMITTING A REPORT (WITH GPS & GRAIL) ---
+        document.getElementById('report-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const store = document.getElementById('store-name').value;
+            const details = document.getElementById('car-details').value;
+            const topGrail = localStorage.getItem('iso-1') || null;
+
+            if (!db) {
+                alert("Demo Mode: Your intel would be saved here!");
+                closeModal();
+                return;
+            }
+
+            const btn = e.submitter;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transmitting...';
+
+            try {
+                // Secretly grab GPS coordinates for the map
+                let coords = null;
+                if ("geolocation" in navigator) {
+                    coords = await new Promise((resolve) => {
+                        navigator.geolocation.getCurrentPosition(
+                            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                            err => resolve(null), // Fail silently, coords are optional
+                            { timeout: 5000 }
+                        );
+                    });
+                }
+
+                await addDoc(collection(db, "reports"), {
+                    store: store,
+                    details: details,
+                    timestamp: serverTimestamp(),
+                    user: currentUser ? currentUser.displayName : 'Anonymous Hunter',
+                    avatar: currentUser ? currentUser.photoURL : null,
+                    image: uploadedBase64Image, // Base64 compressed image
+                    grail: topGrail, // Attach their #1 ISO
+                    location: coords
+                });
+                closeModal();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert("Transmission failed. Please check connection.");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Transmit';
+            }
+        });
+
+        // --- REAL-TIME FEED & MAP UPDATES ---
+        function loadFeed() {
+            const q = query(collection(db, "reports"), orderBy("timestamp", "desc"), limit(25));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('feed-list');
+                list.innerHTML = '';
                 
-            const grailHTML = data.grail 
-                ? `<div class="text-[10px] text-radar-primary font-bold mt-1 tracking-wide"><i class="fas fa-bullseye"></i> ISO: ${data.grail}</div>`
-                : '';
+                // Clear old map markers
+                if(map) {
+                    markers.forEach(m => map.removeLayer(m));
+                    markers = [];
+                }
 
-            post.innerHTML = `
-                <div class="flex items-center gap-3 mb-3">
-                    ${avatarHTML}
-                    <div class="flex-1">
-                        <div class="text-white font-bold flex items-center gap-2">
-                            ${data.username || 'Anonymous'}
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const timeString = data.timestamp ? timeAgo(data.timestamp.toDate()) : 'Just now';
+                    const avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${data.user}&background=0b1120&color=22c55e`;
+                    
+                    // Build HTML string for image if it exists
+                    const imageHtml = data.image ? `
+                        <div class="mt-3 rounded-lg overflow-hidden border border-slate-700 max-h-60">
+                            <img src="${data.image}" class="w-full h-full object-cover" alt="Stock Photo">
                         </div>
-                        ${grailHTML}
-                        <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1 mt-1">
-                            <i class="fas fa-satellite-dish text-radar-primary"></i> ${timeString}
+                    ` : '';
+
+                    // Build HTML string for Top Grail if it exists
+                    const grailHtml = data.grail ? `
+                        <div class="mt-1 flex items-center gap-1 text-[10px] text-radar-cyan font-mono tracking-wider">
+                            <i class="fas fa-crosshairs"></i> ISO: ${data.grail}
                         </div>
-                    </div>
-                </div>
-                
-                <div class="inline-flex items-center gap-1.5 bg-[#0f3a2c] text-radar-primary border border-[#16654a] px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest mb-3">
-                    <i class="fas fa-map-marker-alt"></i> ${data.location}
-                </div>
-                
-                <h3 class="text-white font-bold text-lg leading-snug mb-2">${data.car}</h3>
-                
-                ${imageHTML} 
-                
-                ${data.intel ? `<p class="text-slate-400 text-sm italic mb-4">"${data.intel}"</p>` : ''}
-                
-                <div class="border-t border-slate-800 pt-3 flex justify-between items-center mt-2">
-                    <div class="flex gap-2">
-                        <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.car)}&_sacat=0" target="_blank" class="bg-[#0f172a] border border-[#1e3a8a] text-[#60a5fa] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-[#1e3a8a] hover:text-white transition">
-                            <span class="text-[10px] lowercase italic font-serif tracking-tighter pr-0.5">ebay</span> VALUE
-                        </a>
-                        <button class="bg-radar-accent border border-slate-700 text-slate-400 px-3 py-1.5 rounded-lg hover:text-white transition">
-                            <i class="fas fa-trash-alt text-sm"></i>
-                        </button>
-                    </div>
-                    <button class="bg-[#450a0a]/50 border border-[#7f1d1d] text-[#fca5a5] px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold tracking-wider hover:bg-red-900 transition flex items-center gap-1.5">
-                        <i class="fas fa-ban"></i> PEGS EMPTY
-                    </button>
-                </div>
-            `;
+                    ` : '';
 
-            if (prepend) feed.insertBefore(post, feed.firstChild);
-            else feed.appendChild(post);
-            
-            postCount++;
-            document.getElementById('post-count').textContent = `${postCount} Reports`;
+                    const card = document.createElement('div');
+                    card.className = "bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800 transition-all hover:border-slate-600";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <img src="${avatarUrl}" class="w-8 h-8 rounded-full border border-slate-700" alt="Avatar">
+                                <div>
+                                    <h3 class="font-bold text-sm text-white">${data.store}</h3>
+                                    <p class="text-xs text-slate-400 font-mono">${data.user} • ${timeString}</p>
+                                    ${grailHtml}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">${data.details}</p>
+                        ${imageHtml}
+                    `;
+                    list.appendChild(card);
 
-            if(data.lat && data.lng) addMapPin(data.lat, data.lng, data.username, data.location, data.car);
+                    // Add to map if coordinates exist
+                    if(data.location && map) {
+                        const pulseIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: "<div class='gps-pulse'></div>",
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        });
+                        const marker = L.marker([data.location.lat, data.location.lng], {icon: pulseIcon})
+                            .bindPopup(`<b style="color:black">${data.store}</b><br><span style="color:#333">${data.details}</span>`)
+                            .addTo(map);
+                        markers.push(marker);
+                    }
+                });
+            });
         }
 
-        // --- Triple Video Feed ---
+        // --- TRIPLE YOUTUBE VIDEO FEED ---
         async function fetchDiecastNews() {
             const container = document.getElementById('view-videos');
             const list = document.getElementById('news-feed-list');
@@ -611,7 +721,7 @@
             if (container.dataset.loaded === 'true') return; 
             
             try {
-                // Formatting all three YouTube Channels for the RSS pull
+                // Formatting all THREE YouTube Channels for the RSS pull
                 const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
                 const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg'); // The Wheel Collector
                 const customUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=customcollects'); // Custom Collects
@@ -640,12 +750,10 @@
                 // Sort the ultimate master list by newest
                 videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
                 
-                // Render the Top 12 most recent across all channels
                 renderVideos(videos.slice(0, 12));
 
             } catch(e) {
                 console.warn("Live fetch failed, deploying failsafe cache...", e);
-                // Failsafe cache to keep the app looking great offline
                 const failsafeVideos = [
                     { title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
                     { title: "Hot Wheels 2027 A Case Unboxing", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" },
@@ -663,14 +771,14 @@
                     const card = document.createElement('div');
                     card.className = "bg-radar-panel rounded-xl overflow-hidden shadow-lg border border-slate-800 transition-all hover:border-radar-cyan";
                     card.innerHTML = `
-                        <div class="relative cursor-pointer h-40" onclick="window.open('${item.link}', '_blank')">
+                        <div class="relative cursor-pointer h-44" onclick="window.open('${item.link}', '_blank')">
                             <img src="${imgSrc}" class="w-full h-full object-cover opacity-80" onerror="this.src='${item.thumbnail}'">
                             <i class="fab fa-youtube absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl text-red-600 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"></i>
                         </div>
                         <div class="p-4">
                             <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
-                                <span class="text-radar-cyan"><i class="fas fa-video"></i> ${item.author}</span>
-                                <span class="text-slate-400">${pubDate}</span>
+                                <span class="text-radar-cyan"><i class="fas fa-video mr-1"></i> ${item.author}</span>
+                                <span class="text-slate-400 font-mono">${pubDate}</span>
                             </div>
                             <h3 class="text-white font-bold text-sm leading-snug mb-3 line-clamp-2">${item.title}</h3>
                             <a href="${item.link}" target="_blank" class="block text-center w-full bg-[#450a0a]/80 border border-[#7f1d1d] text-red-200 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-900 transition">Watch Video</a>
@@ -682,56 +790,75 @@
             }
         }
 
-        // --- Init ---
-        window.onload = () => {
-            fetchDiecastNews();
-            loadDailyFact(); // Load the fun fact of the day on startup!
+        // --- FACT OF THE DAY ---
+        function initDailyFact() {
+            const facts = [
+                "The original 1968 Hot Wheels 'Sweet 16' featured spectraflame paint and redline tires.",
+                "Matchbox got its name because the original toys were sold in replica matchboxes to comply with a school rule.",
+                "The 1969 Pink Rear-Loading Volkswagen Beach Bomb is considered the rarest Hot Wheels, valued over $150,000.",
+                "Treasure Hunts were introduced in 1995 to drive collector interest. Only 10,000 of each were made initially.",
+                "The diecast 'scale' of 1:64 isn't always exact; manufacturers often alter proportions to fit the standard blister pack.",
+                "Super Treasure Hunts (STH) feature 'Spectraflame' paint and Real Riders (rubber tires) instead of plastic.",
+                "Hot Wheels produces over 8 million cars a week. That's over 13 cars every second!",
+                "Larry Wood, often called 'Mr. Hot Wheels', was the chief designer for over 40 years.",
+                "The famous Hot Wheels orange track was chosen because children respond best to bright, vibrant colors.",
+                "The first Matchbox vehicle ever created was a small brass road roller."
+            ];
             
-            if (isFirebaseConfigured) {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                provider = new GoogleAuthProvider();
+            // Pick a fact based on the current date so it changes every 24 hours
+            const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+            const selectedFact = facts[dayIndex % facts.length];
+            
+            document.getElementById('daily-fact-text').textContent = selectedFact;
+        }
 
-                onAuthStateChanged(auth, (user) => {
-                    currentUser = user;
-                    const nameSpan = document.getElementById('header-username');
-                    const avatarImg = document.getElementById('header-avatar');
-                    const iconDiv = document.getElementById('header-icon');
+        // --- HELPERS ---
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + "y ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + "m ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + "d ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + "h ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " min ago";
+            return "Just now";
+        }
 
-                    if (user) {
-                        nameSpan.textContent = user.displayName.split(' ')[0];
-                        if (user.photoURL) {
-                            avatarImg.src = user.photoURL;
-                            avatarImg.classList.remove('hidden');
-                            iconDiv.classList.add('hidden');
-                        }
-                    } else {
-                        nameSpan.textContent = 'Sign In';
-                        avatarImg.classList.add('hidden');
-                        iconDiv.classList.remove('hidden');
-                    }
-                });
+        function renderDemoFeed() {
+            const list = document.getElementById('feed-list');
+            list.innerHTML = `
+                <div class="bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">UK</div>
+                        <div>
+                            <h3 class="font-bold text-sm">Demo Mode Active</h3>
+                            <p class="text-xs text-slate-400 font-mono">System • Just now</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-300">Add your Firebase API keys to see live data!</p>
+                </div>
+            `;
+        }
 
-                postsRef = collection(db, "intel_posts");
-                const q = query(postsRef, orderBy("timestamp", "desc"));
-                onSnapshot(q, (snapshot) => {
-                    document.getElementById('feed-container').innerHTML = '';
-                    postCount = 0; 
-                    if(liveMap) {
-                        liveMap.eachLayer((layer) => {
-                            if (layer instanceof L.Marker) liveMap.removeLayer(layer);
-                        });
-                    }
-                    snapshot.forEach((doc) => renderPost(doc.data()));
-                });
-            } else {
-                setTimeout(() => {
-                    renderPost({ username: "Adam Green", grail: "Matchbox Porsche 911", location: "ALDI - MORETON", car: "Sierra Cosworth super treasure hunt", timestamp: new Date(Date.now() - 86400000) });
-                    renderPost({ username: "DiecastDave", grail: "Boulevard Skyline", location: "SMYTHS TOYS - BROMBOROUGH", car: "Hot wheels boulevard set", intel: "Only a few fantasy cars left on the pegs", timestamp: new Date(Date.now() - 172800000) });
-                }, 500);
-            }
-        };
+        // Search filter basic functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const posts = document.getElementById('feed-list').children;
+            Array.from(posts).forEach(post => {
+                const text = post.innerText.toLowerCase();
+                post.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        });
+
+        // Initialize features on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initDailyFact();
+        });
+
     </script>
 </body>
 </html>
