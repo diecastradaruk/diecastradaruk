@@ -17,11 +17,11 @@
                 extend: {
                     colors: {
                         radar: {
-                            bg: '#0b1120',
-                            panel: '#111827',
-                            primary: '#10b981',
-                            cyan: '#06b6d4',
-                            accent: '#1e293b'
+                            bg: '#050b14',        /* Deeper dark background to match Pic 1 */
+                            panel: '#0f1623',     /* Deep navy for panels */
+                            primary: '#10b981',   /* The classic emerald green */
+                            cyan: '#06b6d4',      
+                            accent: '#1e293b'     
                         }
                     },
                     fontFamily: {
@@ -32,7 +32,7 @@
         }
     </script>
     <style>
-        body { background-color: #0b1120; color: #f8fafc; overflow-x: hidden; }
+        body { background-color: #050b14; color: #f8fafc; overflow-x: hidden; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { scrollbar-width: none; }
         
@@ -63,11 +63,11 @@
 </head>
 <body class="pb-24">
 
-    <!-- Header (Pic 1 Style) -->
+    <!-- Header (Exact Pic 1 Style) -->
     <header class="bg-radar-panel border-b border-radar-primary shadow-[0_4px_15px_rgba(16,185,129,0.2)] sticky top-0 z-50 flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full border border-radar-cyan flex items-center justify-center bg-black/50">
-                <i class="fas fa-car-side text-radar-cyan text-xs"></i>
+            <div class="w-8 h-8 rounded-full border border-slate-600 flex items-center justify-center bg-black/50">
+                <i class="fas fa-car-side text-slate-400 text-xs"></i>
             </div>
             <div class="font-black italic text-lg tracking-wider">
                 <span class="text-white">DIECAST</span> 
@@ -77,17 +77,25 @@
         </div>
         
         <div class="flex items-center gap-3">
-            <button onclick="openProfile()" class="hidden sm:flex items-center gap-2 bg-black/40 border border-slate-700 rounded-full px-3 py-1 hover:bg-black/60 transition">
-                <div class="w-5 h-5 rounded-full bg-radar-cyan flex items-center justify-center text-black text-[10px] font-bold"><i class="fas fa-user"></i></div>
-                <span class="text-sm font-bold text-slate-200" id="header-username">Hunter</span>
+            <!-- Google Auth Button -->
+            <button id="auth-btn" onclick="toggleAuth()" class="hidden sm:flex items-center gap-2 bg-black/40 border border-slate-700 rounded-full px-3 py-1 hover:bg-black/60 transition">
+                <img id="header-avatar" class="w-5 h-5 rounded-full hidden border border-radar-primary" src="" alt="Avatar">
+                <div id="header-icon" class="w-5 h-5 rounded-full bg-slate-800 border border-radar-primary flex items-center justify-center text-radar-primary text-[10px] font-bold"><i class="fas fa-user"></i></div>
+                <span class="text-sm font-bold text-slate-200" id="header-username">Sign In</span>
             </button>
-            <button onclick="openGarage()" class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition">
-                <i class="fas fa-warehouse"></i>
+            
+            <!-- Trophy & Garage Icons -->
+            <button class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition">
+                <i class="fas fa-trophy"></i>
+            </button>
+            <button onclick="openGarage()" class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition" title="My Garage">
+                <i class="fas fa-warehouse text-sm"></i>
             </button>
             <button class="w-9 h-9 rounded-full bg-radar-accent flex items-center justify-center text-slate-300 hover:text-white transition relative">
                 <i class="fas fa-bell"></i>
                 <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
+            
             <button onclick="openTransmit()" class="hidden md:flex items-center gap-2 bg-radar-primary text-black px-4 py-2 rounded-lg font-black text-sm hover:bg-green-400 transition shadow-[0_0_10px_rgba(16,185,129,0.4)]">
                 <i class="fas fa-camera"></i> REPORT STOCK
             </button>
@@ -111,9 +119,9 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
+        <!-- Navigation Tabs (Pic 1 Style) -->
         <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800">
-            <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all">
+            <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md">
                 <i class="fas fa-list"></i> FEED
             </button>
             <button id="tab-btn-map" onclick="switchTab('map')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all">
@@ -128,7 +136,7 @@
         <div id="view-feed" class="block">
             <!-- Search & Filters -->
             <div class="bg-radar-panel rounded-xl border border-slate-800 p-4 mb-5">
-                <input type="text" placeholder="Search town, store, or car..." class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary mb-3">
+                <input type="text" placeholder="Search town, store, or car..." class="w-full bg-[#050b14] border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary mb-3">
                 <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🔥 Treasure Hunt</button>
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🎯 Smyths Toys</button>
@@ -143,7 +151,7 @@
             </div>
         </div>
 
-        <!-- VIEW: MAP (Placeholder for Phase 5) -->
+        <!-- VIEW: MAP -->
         <div id="view-map" class="hidden">
             <div class="bg-radar-panel border border-slate-800 rounded-xl p-8 text-center text-slate-400">
                 <i class="fas fa-map-marked-alt text-4xl mb-3 text-slate-600"></i>
@@ -171,20 +179,6 @@
     <div id="toast-container"></div>
 
     <!-- MODALS -->
-    <!-- Profile Modal -->
-    <div class="modal-overlay" id="profile-modal">
-        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700">
-            <h2 class="text-white font-bold text-lg mb-2">Hunter Profile</h2>
-            <p class="text-xs text-slate-400 mb-4">Set your public callsign to start transmitting reports.</p>
-            <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-400 mb-1">Callsign (Username)</label>
-                <input type="text" id="profile-name-input" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
-            </div>
-            <button onclick="saveProfile()" class="w-full bg-radar-primary text-black font-bold py-3 rounded-lg mb-2">SAVE PROFILE</button>
-            <button onclick="closeModal('profile-modal')" class="w-full text-slate-400 text-sm font-bold py-2">Cancel</button>
-        </div>
-    </div>
-
     <!-- Garage Modal -->
     <div class="modal-overlay" id="garage-modal">
         <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto">
@@ -193,15 +187,15 @@
             
             <div class="mb-3">
                 <label class="block text-xs font-bold text-radar-primary mb-1"><i class="fas fa-crosshairs"></i> 1. Top Grail</label>
-                <input type="text" id="iso-1" class="w-full bg-black border border-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.15)] rounded-lg p-3 text-white focus:outline-none">
+                <input type="text" id="iso-1" class="w-full bg-[#050b14] border border-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.15)] rounded-lg p-3 text-white focus:outline-none">
             </div>
-            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">2. Wanted Car</label><input type="text" id="iso-2" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
-            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">3. Wanted Car</label><input type="text" id="iso-3" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
-            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">4. Wanted Car</label><input type="text" id="iso-4" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
-            <div class="mb-4"><label class="block text-xs font-bold text-slate-400 mb-1">5. Wanted Car</label><input type="text" id="iso-5" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
+            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">2. Wanted Car</label><input type="text" id="iso-2" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
+            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">3. Wanted Car</label><input type="text" id="iso-3" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
+            <div class="mb-3"><label class="block text-xs font-bold text-slate-400 mb-1">4. Wanted Car</label><input type="text" id="iso-4" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
+            <div class="mb-4"><label class="block text-xs font-bold text-slate-400 mb-1">5. Wanted Car</label><input type="text" id="iso-5" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary"></div>
             
-            <button onclick="saveGarage()" class="w-full bg-radar-primary text-black font-bold py-3 rounded-lg mb-2">SAVE GARAGE</button>
-            <button onclick="closeModal('garage-modal')" class="w-full text-slate-400 text-sm font-bold py-2">Cancel</button>
+            <button onclick="saveGarage()" class="w-full bg-radar-primary text-black font-bold py-3 rounded-lg mb-2 hover:bg-green-400 transition">SAVE GARAGE</button>
+            <button onclick="closeModal('garage-modal')" class="w-full text-slate-400 text-sm font-bold py-2 hover:text-white transition">Cancel</button>
         </div>
     </div>
 
@@ -210,7 +204,7 @@
         <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-white font-bold text-lg">Transmit Intel</h2>
-                <i class="fas fa-times text-slate-400 cursor-pointer p-2" onclick="closeModal('transmit-modal')"></i>
+                <i class="fas fa-times text-slate-400 cursor-pointer p-2 hover:text-white transition" onclick="closeModal('transmit-modal')"></i>
             </div>
             
             <!-- AI Scanner -->
@@ -226,25 +220,26 @@
 
             <div class="mb-3">
                 <label class="block text-xs font-bold text-slate-400 mb-1">Store & Location *</label>
-                <input type="text" id="post-location" placeholder="e.g. Smyths, Manchester" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
+                <input type="text" id="post-location" placeholder="e.g. Smyths, Manchester" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
             </div>
             <div class="mb-3">
                 <label class="block text-xs font-bold text-slate-400 mb-1">Car or Series Found *</label>
-                <input type="text" id="post-car" placeholder="e.g. Boulevard Set" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
+                <input type="text" id="post-car" placeholder="e.g. Boulevard Set" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
             </div>
             <div class="mb-4">
                 <label class="block text-xs font-bold text-slate-400 mb-1">Extra Intel (Optional)</label>
-                <input type="text" id="post-intel" placeholder="e.g. Only 2 left on front pegs" class="w-full bg-black border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
+                <input type="text" id="post-intel" placeholder="e.g. Only 2 left on front pegs" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
             </div>
             
-            <button onclick="submitPost()" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)]"><i class="fas fa-paper-plane mr-2"></i> TRANSMIT</button>
+            <button onclick="submitPost()" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-green-400 transition"><i class="fas fa-paper-plane mr-2"></i> TRANSMIT</button>
         </div>
     </div>
 
-    <!-- Application Logic -->
+    <!-- Application Logic (Firebase & Auth & DB) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // ==========================================
         // PASTE YOUR FIREBASE CONFIG HERE
@@ -259,10 +254,11 @@
   measurementId: "G-T05Y2L42L5"
         };
 
-        let db;
+        let db, auth, provider;
         let postsRef;
         const isFirebaseConfigured = !!firebaseConfig.apiKey;
         let postCount = 0;
+        let currentUser = null;
 
         // UI Helpers
         window.showToast = (message, type = 'success') => {
@@ -276,45 +272,40 @@
         window.openModal = (id) => document.getElementById(id).style.display = 'flex';
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-        // Update Header Name on load
-        const storedName = localStorage.getItem('radar_username');
-        if (storedName) document.getElementById('header-username').textContent = storedName;
-
-        // Tab Switching
+        // Tab Switching Logic (Matching Pic 1 visual states)
         window.switchTab = (tab) => {
-            // Update Buttons
             const btns = ['feed', 'map', 'videos'];
             btns.forEach(b => {
                 const el = document.getElementById(`tab-btn-${b}`);
                 if(b === tab) {
-                    el.className = "flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all";
+                    el.className = "flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md";
                 } else {
                     el.className = "flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all";
                 }
             });
-            // Update Views
             document.getElementById('view-feed').style.display = tab === 'feed' ? 'block' : 'none';
             document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
             document.getElementById('view-videos').style.display = tab === 'videos' ? 'block' : 'none';
         };
 
-        // Modals
-        window.openProfile = () => {
-            document.getElementById('profile-name-input').value = localStorage.getItem('radar_username') || '';
-            openModal('profile-modal');
-        };
-        window.saveProfile = () => {
-            const newName = document.getElementById('profile-name-input').value.trim();
-            if (newName) {
-                localStorage.setItem('radar_username', newName);
-                document.getElementById('header-username').textContent = newName;
-                showToast("Profile callsign updated!");
-                closeModal('profile-modal');
+        // Google Secure Auth Logic
+        window.toggleAuth = () => {
+            if (!isFirebaseConfigured) {
+                showToast("Firebase not configured. Check line 231!", "error");
+                return;
+            }
+            if (currentUser) {
+                if (confirm("Sign out of Diecast Radar?")) {
+                    signOut(auth).then(() => showToast("Signed out successfully."));
+                }
             } else {
-                showToast("Please enter a valid callsign.", "error");
+                signInWithPopup(auth, provider).catch((error) => {
+                    showToast(error.message, "error");
+                });
             }
         };
 
+        // Garage Modals
         window.openGarage = () => {
             const garage = JSON.parse(localStorage.getItem('radar_garage')) || ["", "", "", "", ""];
             for(let i=1; i<=5; i++) document.getElementById(`iso-${i}`).value = garage[i-1] || "";
@@ -327,10 +318,11 @@
             showToast("Garage saved! Your Top Grail is active.");
         };
 
+        // Transmit Intel Check
         window.openTransmit = () => {
-            if (!localStorage.getItem('radar_username')) {
-                showToast("Please set up your Hunter Profile first.", "error");
-                openProfile(); return;
+            if (!currentUser && isFirebaseConfigured) {
+                showToast("Please sign in with Google to transmit intel.", "error");
+                return;
             }
             openModal('transmit-modal');
         };
@@ -376,16 +368,21 @@
             reader.readAsDataURL(file);
         });
 
-        // Submit Post (with Streak logic)
+        // Submit Post logic
         window.submitPost = async () => {
             const location = document.getElementById('post-location').value.trim();
             const car = document.getElementById('post-car').value.trim();
             const intel = document.getElementById('post-intel').value.trim();
-            const username = localStorage.getItem('radar_username');
+            
+            // Get user details safely
+            const username = currentUser ? currentUser.displayName.split(' ')[0] : "Hunter";
+            const avatarUrl = currentUser ? currentUser.photoURL : "";
+            const uid = currentUser ? currentUser.uid : "anonymous";
             const topISO = (JSON.parse(localStorage.getItem('radar_garage')) || [])[0] || "";
 
             if(!location || !car) { showToast("Store and Car are required!", "error"); return; }
 
+            // Hunting Streak Logic
             let streak = parseInt(localStorage.getItem('radar_streak')) || 0;
             let lastPostDate = localStorage.getItem('radar_last_post_date');
             let today = new Date().toDateString();
@@ -398,7 +395,7 @@
             }
 
             const postData = {
-                username, streak, topISO, location, car, intel,
+                username, avatarUrl, uid, streak, topISO, location, car, intel,
                 timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
             };
 
@@ -420,54 +417,57 @@
             showToast("Intel transmitted successfully!");
         }
 
-        // Render Feed Posts (Pic 1 Style)
+        // Render Feed Posts (Perfectly matching Pic 1 Aesthetics)
         function renderPost(data, prepend = false) {
             const feed = document.getElementById('feed-container');
             const post = document.createElement('div');
             
-            // Replicating the Pic 1 sleek card design exactly
-            post.className = 'bg-radar-panel border border-slate-800 rounded-xl border-l-4 border-l-radar-primary p-4 shadow-lg';
+            post.className = 'bg-radar-panel border border-slate-800 rounded-xl border-l-4 border-l-radar-primary p-4 shadow-lg mb-4';
             
             let timeString = "JUST NOW";
             if (data.timestamp && data.timestamp.toDate) {
-                // Formatting time cleanly
+                // Using a relative-like time format for Pic 1 ("1D AGO", etc is complex, so we use precise time)
                 timeString = data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}).toUpperCase();
             }
 
-            let streakHTML = data.streak >= 2 ? `<span class="bg-orange-500/20 text-orange-500 text-[10px] px-2 py-0.5 rounded-full font-bold ml-2">🔥 ${data.streak}</span>` : '';
-            let avatarLetter = data.username ? data.username.charAt(0).toUpperCase() : 'U';
+            let streakHTML = data.streak >= 2 ? `<span class="bg-orange-500/20 text-orange-500 text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shadow-sm">🔥 ${data.streak}</span>` : '';
+            
+            // Replicate Pic 1 Avatar (Either Google photo or bold Letter with green border)
+            let avatarHTML = data.avatarUrl 
+                ? `<img src="${data.avatarUrl}" class="w-10 h-10 rounded-full border border-radar-primary object-cover shadow-[0_0_8px_rgba(16,185,129,0.3)]">` 
+                : `<div class="w-10 h-10 rounded-full border border-radar-primary flex items-center justify-center bg-black font-bold text-lg text-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.3)]">${(data.username || 'U').charAt(0).toUpperCase()}</div>`;
 
             post.innerHTML = `
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full border border-radar-cyan flex items-center justify-center bg-black font-bold text-lg text-radar-cyan shadow-[0_0_8px_rgba(6,182,212,0.3)]">
-                        ${avatarLetter}
-                    </div>
+                    ${avatarHTML}
                     <div class="flex-1">
-                        <div class="text-white font-bold flex items-center">${data.username} ${streakHTML}</div>
+                        <div class="text-white font-bold flex items-center">${data.username || 'Anonymous'} ${streakHTML}</div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <i class="fas fa-satellite-dish text-radar-primary"></i> ${timeString}
+                            <i class="fas fa-satellite-dish text-radar-primary text-[9px]"></i> ${timeString}
                         </div>
+                        ${data.topISO ? `<div class="text-[9px] text-slate-400 mt-0.5"><span class="text-radar-primary border border-radar-primary/30 bg-radar-primary/10 px-1 rounded mr-1">🎯 ISO</span> ${data.topISO}</div>` : ''}
                     </div>
-                    ${data.topISO ? `<div class="text-[10px] bg-black border border-slate-700 px-2 py-1 rounded text-slate-300 font-bold"><i class="fas fa-crosshairs text-radar-primary"></i> ISO: ${data.topISO}</div>` : ''}
                 </div>
                 
+                <!-- Pic 1 Green Location Pill -->
                 <div class="inline-flex items-center gap-1.5 bg-[#0f3a2c] text-radar-primary border border-[#16654a] px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest mb-3">
                     <i class="fas fa-map-marker-alt"></i> ${data.location}
                 </div>
                 
-                <h3 class="text-white font-bold text-lg leading-snug mb-1">${data.car}</h3>
-                ${data.intel ? `<p class="text-slate-400 text-sm italic mb-4">"${data.intel}"</p>` : '<div class="mb-4"></div>'}
+                <h3 class="text-white font-bold text-lg leading-snug mb-2">${data.car}</h3>
+                ${data.intel ? `<p class="text-slate-400 text-sm italic mb-4">"${data.intel}"</p>` : ''}
                 
+                <!-- Pic 1 Action Buttons -->
                 <div class="border-t border-slate-800 pt-3 flex justify-between items-center mt-2">
                     <div class="flex gap-2">
                         <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.car)}&_sacat=0" target="_blank" class="bg-[#0f172a] border border-[#1e3a8a] text-[#60a5fa] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-[#1e3a8a] hover:text-white transition">
-                            <i class="fab fa-ebay text-lg leading-none"></i> VALUE
+                            <span class="text-[10px] lowercase italic font-serif tracking-tighter pr-0.5">ebay</span> VALUE
                         </a>
                         <button class="bg-radar-accent border border-slate-700 text-slate-400 px-3 py-1.5 rounded-lg hover:text-white transition">
-                            <i class="fas fa-trash-alt"></i>
+                            <i class="fas fa-trash-alt text-sm"></i>
                         </button>
                     </div>
-                    <button class="bg-[#450a0a]/50 border border-[#7f1d1d] text-[#fca5a5] px-4 py-1.5 rounded-lg text-xs font-bold tracking-wider hover:bg-red-900 transition flex items-center gap-2">
+                    <button class="bg-[#450a0a]/50 border border-[#7f1d1d] text-[#fca5a5] px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold tracking-wider hover:bg-red-900 transition flex items-center gap-1.5">
                         <i class="fas fa-ban"></i> PEGS EMPTY (0)
                     </button>
                 </div>
@@ -476,13 +476,13 @@
             if (prepend) feed.insertBefore(post, feed.firstChild);
             else feed.appendChild(post);
             
-            // Update counter
             postCount++;
             document.getElementById('post-count').textContent = `${postCount} Reports`;
         }
 
         // Dual-Source Video Fetch
         async function fetchDiecastNews() {
+            // Unchanged from previous version - dual source Lamley/WheelCollector working perfectly
             const container = document.getElementById('view-videos');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
@@ -502,13 +502,12 @@
                 const twcData = await twcRes.json(); if(twcData?.items) videos = videos.concat(twcData.items);
                 
                 if (videos.length === 0) throw new Error("Empty feeds");
-                
                 videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
                 renderVideos(videos.slice(0, 10));
 
             } catch(e) {
                 const failsafeVideos = [
-                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
+                    { title: "Hunting for Rare Hot Wheels 🔥 at B&M", link: "https://www.youtube.com/watch?v=l5zchpdju5w", pubDate: new Date().toISOString(), author: "The Wheel Collector", thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg" },
                     { title: "Hot Wheels 2027 A Case Unboxing", link: "https://www.youtube.com/watch?v=4ECWszkiJ5E", pubDate: new Date(Date.now() - 40000000).toISOString(), author: "Lamley Group", thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg" }
                 ];
                 renderVideos(failsafeVideos);
@@ -549,16 +548,40 @@
             if (isFirebaseConfigured) {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                auth = getAuth(app);
+                provider = new GoogleAuthProvider();
+
+                // Listen for Google Auth State Changes
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    const nameSpan = document.getElementById('header-username');
+                    const avatarImg = document.getElementById('header-avatar');
+                    const iconDiv = document.getElementById('header-icon');
+
+                    if (user) {
+                        nameSpan.textContent = user.displayName.split(' ')[0]; // Just first name
+                        if (user.photoURL) {
+                            avatarImg.src = user.photoURL;
+                            avatarImg.classList.remove('hidden');
+                            iconDiv.classList.add('hidden');
+                        }
+                    } else {
+                        nameSpan.textContent = 'Sign In';
+                        avatarImg.classList.add('hidden');
+                        iconDiv.classList.remove('hidden');
+                    }
+                });
+
                 postsRef = collection(db, "intel_posts");
                 const q = query(postsRef, orderBy("timestamp", "desc"));
                 onSnapshot(q, (snapshot) => {
                     document.getElementById('feed-container').innerHTML = '';
-                    postCount = 0; // Reset counter before re-render
+                    postCount = 0; 
                     snapshot.forEach((doc) => renderPost(doc.data()));
                 });
             } else {
                 setTimeout(() => {
-                    renderPost({ username: "Adam Green", streak: 2, location: "ALDI - MORETON", car: "Sierra Cosworth super treasure hunt", timestamp: new Date(Date.now() - 86400000) });
+                    renderPost({ username: "Adam Green", streak: 2, topISO: "Nissan Skyline GT-R", location: "ALDI - MORETON", car: "Sierra Cosworth super treasure hunt", timestamp: new Date(Date.now() - 86400000) });
                     renderPost({ username: "Adam Green", streak: 0, location: "SMYTHS TOYS - BROMBOROUGH", car: "Hot wheels boulevard set", intel: "Only a few fantasy cars left on the pegs", timestamp: new Date(Date.now() - 172800000) });
                 }, 500);
             }
