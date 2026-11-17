@@ -105,6 +105,9 @@
                 <div id="user-profile" class="hidden items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-slate-800">
                     <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700">
                     <span id="user-name" class="text-xs font-bold text-slate-300"></span>
+                    <button id="logout-btn" class="ml-1 text-slate-500 hover:text-red-500 transition flex items-center justify-center w-5 h-5" title="Log Out">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
                 <button id="login-btn" class="bg-radar-cyan/10 text-radar-cyan border border-radar-cyan/30 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider hover:bg-radar-cyan/20 transition">
                     LOGIN
@@ -267,7 +270,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // IMPORT SIGN OUT METHOD
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // ==========================================
         // PASTE YOUR FIREBASE CONFIG KEYS HERE!
@@ -304,10 +308,18 @@
         function setupAuth() {
             const loginBtn = document.getElementById('login-btn');
             const profileDiv = document.getElementById('user-profile');
+            const logoutBtn = document.getElementById('logout-btn');
             const provider = new GoogleAuthProvider();
 
             loginBtn.addEventListener('click', () => {
                 signInWithPopup(auth, provider).catch(e => console.error("Login failed", e));
+            });
+
+            // ADDED LOGOUT LOGIC
+            logoutBtn.addEventListener('click', () => {
+                if(confirm("Are you sure you want to log out of the Radar?")) {
+                    signOut(auth).catch(e => console.error("Logout failed", e));
+                }
             });
 
             onAuthStateChanged(auth, (user) => {
@@ -458,8 +470,13 @@
                     const imageHtml = data.image ? `<div class="mt-3 rounded-lg overflow-hidden max-h-60"><img src="${data.image}" class="w-full h-full object-cover"></div>` : '';
                     const grailHtml = data.grail ? `<div class="mt-1 flex items-center gap-1 text-[10px] text-radar-cyan font-mono tracking-wider"><i class="fas fa-crosshairs"></i> ISO: ${data.grail}</div>` : '';
 
-                    // FIX: eBay search now ONLY looks for the car details, ignoring the store name completely
                     const ebaySearchUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.details)}`;
+                    
+                    // SMART DIRECTIONS: Uses exact GPS coordinates if available, otherwise falls back to searching the store name!
+                    let directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.store)}`;
+                    if (data.location && data.location.lat && data.location.lng) {
+                        directionsUrl = `https://www.google.com/maps/search/?api=1&query=${data.location.lat},${data.location.lng}`;
+                    }
 
                     const card = document.createElement('div');
                     card.className = "bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800";
@@ -467,12 +484,17 @@
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex items-center gap-3">
                                 <img src="${avatarUrl}" class="w-8 h-8 rounded-full border border-slate-700">
-                                <div><h3 class="font-bold text-sm text-white">${data.store}</h3><p class="text-xs text-slate-400 font-mono">${data.user} • ${timeString}</p>${grailHtml}</div>
+                                <div>
+                                    <a href="${directionsUrl}" target="_blank" title="Get Directions to this Store" class="font-bold text-sm text-white hover:text-radar-cyan transition-colors flex items-center gap-1">
+                                        ${data.store} <i class="fas fa-external-link-alt text-[10px] text-slate-500"></i>
+                                    </a>
+                                    <p class="text-xs text-slate-400 font-mono">${data.user} • ${timeString}</p>
+                                    ${grailHtml}
+                                </div>
                             </div>
                         </div>
                         <p class="text-sm text-slate-300 leading-relaxed">${data.details}</p>
                         ${imageHtml}
-                        <!-- Integrated eBay Check Prices Button -->
                         <div class="mt-3 pt-3 border-t border-slate-800">
                             <a href="${ebaySearchUrl}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-slate-800/50 hover:bg-slate-700 border border-slate-700 rounded-lg py-2.5 text-xs font-bold text-slate-300 transition-all uppercase tracking-wider">
                                 <i class="fab fa-ebay text-blue-400 text-lg"></i> Check eBay Prices
@@ -500,7 +522,6 @@
             let allVideos = [];
 
             try {
-                // Fetching via a proxy to completely bypass YouTube/RSS rate limits!
                 const urls = [
                     { feed: 'https://www.youtube.com/feeds/videos.xml?user=lamleygroup', name: "Lamley Group" },
                     { feed: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg', name: "The Wheel Collector" },
