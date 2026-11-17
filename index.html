@@ -55,6 +55,11 @@
 
         /* Custom Map Radar Ping */
         .custom-radar-icon { position: relative; }
+        
+        /* Dark Mode Map CSS Trick (Inverts the free OpenStreetMap to Dark Mode!) */
+        .leaflet-tile {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
     </style>
 </head>
 <body class="pb-24">
@@ -293,9 +298,9 @@
             // Center roughly on central UK
             liveMap = L.map('uk-radar-map').setView([53.4808, -2.2426], 6);
 
-            // Sleek "Dark Matter" tiles from CartoDB to match app styling
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
+            // Using free OpenStreetMap tiles with CSS inversion for permanent dark mode (No API Keys needed!)
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(liveMap);
 
