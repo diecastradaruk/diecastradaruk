@@ -270,14 +270,13 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        // IMPORT SIGN OUT METHOD
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // ==========================================
         // PASTE YOUR FIREBASE CONFIG KEYS HERE!
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
+             apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
   authDomain: "diecast-radar-5c38d.firebaseapp.com",
   projectId: "diecast-radar-5c38d",
   storageBucket: "diecast-radar-5c38d.firebasestorage.app",
@@ -315,7 +314,6 @@
                 signInWithPopup(auth, provider).catch(e => console.error("Login failed", e));
             });
 
-            // ADDED LOGOUT LOGIC
             logoutBtn.addEventListener('click', () => {
                 if(confirm("Are you sure you want to log out of the Radar?")) {
                     signOut(auth).catch(e => console.error("Logout failed", e));
@@ -472,11 +470,9 @@
 
                     const ebaySearchUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.details)}`;
                     
-                    // SMART DIRECTIONS: Uses exact GPS coordinates if available, otherwise falls back to searching the store name!
-                    let directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.store)}`;
-                    if (data.location && data.location.lat && data.location.lng) {
-                        directionsUrl = `https://www.google.com/maps/search/?api=1&query=${data.location.lat},${data.location.lng}`;
-                    }
+                    // PRIVACY FIX: This now STRICTLY searches Google Maps for the Store Name text (e.g. "Smyths Manchester")
+                    // It ignores GPS coordinates so it will never accidentally route users to someone's home address!
+                    const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.store)}`;
 
                     const card = document.createElement('div');
                     card.className = "bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800";
@@ -503,6 +499,8 @@
                     `;
                     list.appendChild(card);
 
+                    // Note: The physical GPS marker on the Radar Map tab will still drop wherever they were standing when they pressed transmit. 
+                    // This is usually fine for a "Radar", but if it becomes an issue, we can remove the map pins entirely in the next update!
                     if(data.location && map) {
                         const icon = L.divIcon({ className: 'custom-div-icon', html: "<div class='gps-pulse'></div>", iconSize: [20,20] });
                         const m = L.marker([data.location.lat, data.location.lng], {icon: icon}).bindPopup(`<b style="color:black">${data.store}</b><br><span style="color:#333">${data.details}</span>`).addTo(map);
