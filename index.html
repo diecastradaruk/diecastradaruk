@@ -164,7 +164,7 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Transmit Modal (Clean, stable version) -->
+    <!-- Transmit Modal (Stable Version + Camera feature) -->
     <div class="modal-overlay" id="transmit-modal">
         <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar">
             <div class="flex justify-between items-center mb-4">
@@ -180,9 +180,21 @@
                 <label class="block text-xs font-bold text-slate-400 mb-1">Car or Series Found *</label>
                 <input type="text" id="post-car" placeholder="e.g. Boulevard Set" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary" required>
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="block text-xs font-bold text-slate-400 mb-1">Extra Intel (Optional)</label>
                 <input type="text" id="post-intel" placeholder="e.g. Only 2 left on front pegs" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
+            </div>
+            
+            <!-- New Photo Upload Section -->
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-400 mb-1">Photo Evidence (Optional)</label>
+                <div class="relative w-full border-2 border-dashed border-slate-700 rounded-lg p-4 text-center bg-[#050b14] hover:border-radar-primary transition cursor-pointer" onclick="document.getElementById('post-image').click()">
+                    <i class="fas fa-camera text-2xl text-slate-500 mb-2" id="photo-icon"></i>
+                    <p class="text-xs text-slate-400 font-bold" id="photo-text">Tap to snap a photo</p>
+                    <img id="photo-preview" class="hidden mx-auto max-h-32 rounded mt-2 border border-slate-600 object-cover">
+                    <!-- accept="image/*" capture="environment" opens the back camera on mobile directly -->
+                    <input type="file" id="post-image" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
+                </div>
             </div>
             
             <button onclick="submitPost()" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-green-400 transition"><i class="fas fa-paper-plane mr-2"></i> TRANSMIT</button>
@@ -213,6 +225,7 @@
         const isFirebaseConfigured = !!firebaseConfig.apiKey;
         let postCount = 0;
         let currentUser = null;
+        let currentImageBase64 = null; // Store the compressed image
 
         // UI Helpers
         window.showToast = (message, type = 'success') => {
@@ -267,6 +280,46 @@
             openModal('transmit-modal');
         };
 
+        // Image Compression Logic
+        window.previewImage = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Compress the image so it fits easily into the database
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; // Resize to max 600px width
+                    const scaleSize = MAX_WIDTH / img.width;
+                    
+                    // Only scale down, don't scale up small images
+                    if (scaleSize < 1) {
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                    } else {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to base64 string (Quality 0.7)
+                    currentImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Update UI
+                    document.getElementById('photo-preview').src = currentImageBase64;
+                    document.getElementById('photo-preview').classList.remove('hidden');
+                    document.getElementById('photo-icon').classList.add('hidden');
+                    document.getElementById('photo-text').textContent = "Photo attached! Tap to change.";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
         // Submit Post logic
         window.submitPost = async () => {
             const location = document.getElementById('post-location').value.trim();
@@ -281,14 +334,19 @@
 
             const postData = {
                 username, avatarUrl, uid, location, car, intel,
+                imageBase64: currentImageBase64, // Attach the compressed image
                 timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
             };
 
             if (isFirebaseConfigured) {
                 try {
+                    // Send to Firebase
                     await addDoc(postsRef, postData);
                     resetForm();
-                } catch (e) { showToast("Error saving to database.", "error"); }
+                } catch (e) { 
+                    showToast("Error saving to database. Image might be too large.", "error"); 
+                    console.error(e);
+                }
             } else {
                 renderPost(postData, true);
                 resetForm();
@@ -297,6 +355,13 @@
 
         function resetForm() {
             ['post-location','post-car','post-intel'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('post-image').value = ''; // Reset file input
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-preview').src = '';
+            document.getElementById('photo-icon').classList.remove('hidden');
+            document.getElementById('photo-text').textContent = "Tap to snap a photo";
+            currentImageBase64 = null; // Clear image data
+            
             closeModal('transmit-modal');
             showToast("Intel transmitted successfully!");
         }
@@ -318,6 +383,11 @@
                 ? `<img src="${data.avatarUrl}" class="w-10 h-10 rounded-full border border-radar-primary object-cover shadow-[0_0_8px_rgba(16,185,129,0.3)]">` 
                 : `<div class="w-10 h-10 rounded-full border border-radar-primary flex items-center justify-center bg-black font-bold text-lg text-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.3)]">${(data.username || 'U').charAt(0).toUpperCase()}</div>`;
 
+            // Check if there is an image in the post
+            const imageHTML = data.imageBase64 
+                ? `<img src="${data.imageBase64}" class="w-full h-48 object-cover rounded-lg mb-4 border border-slate-700 shadow-sm" alt="Stock Photo">` 
+                : '';
+
             post.innerHTML = `
                 <div class="flex items-center gap-3 mb-3">
                     ${avatarHTML}
@@ -335,6 +405,9 @@
                 </div>
                 
                 <h3 class="text-white font-bold text-lg leading-snug mb-2">${data.car}</h3>
+                
+                ${imageHTML} <!-- Inject the photo here if it exists -->
+                
                 ${data.intel ? `<p class="text-slate-400 text-sm italic mb-4">"${data.intel}"</p>` : ''}
                 
                 <!-- Pic 1 Action Buttons -->
@@ -431,7 +504,7 @@
                 provider = new GoogleAuthProvider();
 
                 // Listen for Google Auth State Changes
-                onAuthStateChanged(auth, (user) => {
+                onAuthState onAuthStateChanged(auth, (user) => {
                     currentUser = user;
                     const nameSpan = document.getElementById('header-username');
                     const avatarImg = document.getElementById('header-avatar');
