@@ -109,27 +109,24 @@
     <!-- Main Content Wrapper -->
     <div class="max-w-4xl mx-auto px-4 pt-5">
         
-        <!-- Radar Status Bar -->
-        <div class="bg-radar-panel rounded-xl p-3 flex justify-between items-center mb-4 border border-slate-800">
-            <div class="flex items-center gap-2 text-radar-primary font-bold text-sm tracking-widest uppercase">
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-radar-primary"></span>
-                </span>
-                Radar Active
+        <!-- Daily Diecast Intel (Fun Fact) -->
+        <div class="bg-radar-panel border border-slate-800 rounded-xl p-3 mb-4 flex items-start gap-3 shadow-md">
+            <div class="bg-radar-primary/10 p-2 rounded-lg text-radar-primary mt-0.5">
+                <i class="fas fa-lightbulb"></i>
             </div>
-            <div class="text-slate-400 text-xs font-bold flex items-center gap-2">
-                <i class="fas fa-list-ul"></i> <span id="post-count">Scanning...</span>
+            <div>
+                <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-1">Daily Intel</h4>
+                <p id="daily-fact-text" class="text-slate-400 text-xs leading-relaxed italic">Loading intel...</p>
             </div>
         </div>
 
         <!-- Sleek Whatnot Referral Link -->
-        <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="flex justify-center items-center gap-2 bg-radar-panel border border-slate-800 rounded-xl p-3 mb-5 text-xs font-bold text-slate-400 hover:text-white hover:border-radar-primary transition">
+        <a href="https://whatnot.com/invite/any_deloreans" target="_blank" class="flex justify-center items-center gap-2 bg-radar-panel border border-slate-800 rounded-xl p-3 mb-5 text-xs font-bold text-slate-400 hover:text-white hover:border-radar-primary transition shadow-sm">
             <i class="fas fa-gift text-radar-primary"></i> Get a Free £10 to Spend on Whatnot!
         </a>
 
         <!-- Navigation Tabs -->
-        <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800 relative z-40">
+        <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800 relative z-40 shadow-sm">
             <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md">
                 <i class="fas fa-list"></i> FEED
             </button>
@@ -144,25 +141,28 @@
         <!-- VIEW: FEED -->
         <div id="view-feed" class="block">
             
-            <!-- Daily Diecast Intel (Fun Fact) -->
-            <div class="bg-radar-panel border border-slate-800 rounded-xl p-3 mb-5 flex items-start gap-3 shadow-md">
-                <div class="bg-radar-primary/10 p-2 rounded-lg text-radar-primary mt-0.5">
-                    <i class="fas fa-lightbulb"></i>
-                </div>
-                <div>
-                    <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-1">Daily Intel</h4>
-                    <p id="daily-fact-text" class="text-slate-400 text-xs leading-relaxed italic">Loading intel...</p>
-                </div>
-            </div>
-
             <!-- Search & Filters -->
-            <div class="bg-radar-panel rounded-xl border border-slate-800 p-4 mb-5">
+            <div class="bg-radar-panel rounded-xl border border-slate-800 p-4 mb-4 shadow-sm">
                 <input type="text" placeholder="Search town, store, or car..." class="w-full bg-[#050b14] border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary mb-3">
                 <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🔥 Treasure Hunt</button>
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🎯 Smyths Toys</button>
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">🚙 Boulevard</button>
                     <button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-radar-accent text-xs font-bold text-slate-300 border border-slate-700 hover:bg-slate-700">✖ Clear</button>
+                </div>
+            </div>
+
+            <!-- Radar Status Bar -->
+            <div class="bg-radar-panel rounded-xl p-3 flex justify-between items-center mb-5 border border-slate-800 shadow-sm">
+                <div class="flex items-center gap-2 text-radar-primary font-bold text-sm tracking-widest uppercase">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-radar-primary"></span>
+                    </span>
+                    Radar Active
+                </div>
+                <div class="text-slate-400 text-xs font-bold flex items-center gap-2">
+                    <i class="fas fa-list-ul"></i> <span id="post-count">Scanning...</span>
                 </div>
             </div>
 
