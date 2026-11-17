@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Leaflet.js for Interactive Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -40,14 +44,17 @@
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
-            z-index: 200; padding: 20px; backdrop-filter: blur(4px);
+            z-index: 999; padding: 20px; backdrop-filter: blur(4px);
         }
 
         /* Toasts */
-        #toast-container { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
+        #toast-container { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
         .toast { background: #111827; border-left: 4px solid #10b981; color: white; padding: 12px 16px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: bold; animation: slideDown 0.3s ease-out; }
         .toast.error { border-left-color: #ef4444; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Custom Map Radar Ping */
+        .custom-radar-icon { position: relative; }
     </style>
 </head>
 <body class="pb-24">
@@ -55,9 +62,18 @@
     <!-- Header (Exact Pic 1 Style) -->
     <header class="bg-radar-panel border-b border-radar-primary shadow-[0_4px_15px_rgba(16,185,129,0.2)] sticky top-0 z-50 flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full border border-slate-600 flex items-center justify-center bg-black/50">
-                <i class="fas fa-car-side text-slate-400 text-xs"></i>
+            <!-- Restored: Spinning Radar Car Logo -->
+            <div class="relative w-9 h-9 rounded-full border border-radar-primary/50 bg-[#050b14] overflow-hidden flex items-center justify-center shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                <div class="absolute inset-0 border-2 border-radar-primary/20 rounded-full"></div>
+                <!-- Radar sweep -->
+                <div class="absolute w-full h-full bg-gradient-to-tr from-transparent via-radar-primary/40 to-transparent animate-spin" style="animation-duration: 3s;"></div>
+                <!-- Crosshairs -->
+                <div class="absolute w-full h-[1px] bg-radar-primary/40"></div>
+                <div class="absolute h-full w-[1px] bg-radar-primary/40"></div>
+                <!-- Car Icon -->
+                <i class="fas fa-car-side text-radar-cyan text-xs relative z-10 drop-shadow-[0_0_3px_#06b6d4]"></i>
             </div>
+
             <div class="font-black italic text-lg tracking-wider">
                 <span class="text-white">DIECAST</span> 
                 <span class="text-radar-cyan">RADAR</span> 
@@ -68,7 +84,7 @@
         <div class="flex items-center gap-3">
             <!-- Google Auth Button -->
             <button id="auth-btn" onclick="toggleAuth()" class="flex items-center gap-2 bg-black/40 border border-slate-700 rounded-full px-3 py-1 hover:bg-black/60 transition">
-                <img id="header-avatar" class="w-5 h-5 rounded-full hidden border border-radar-primary" src="" alt="Avatar">
+                <img id="header-avatar" class="w-5 h-5 rounded-full hidden border border-radar-primary object-cover" src="" alt="Avatar">
                 <div id="header-icon" class="w-5 h-5 rounded-full bg-slate-800 border border-radar-primary flex items-center justify-center text-radar-primary text-[10px] font-bold"><i class="fas fa-user"></i></div>
                 <span class="text-sm font-bold text-slate-200" id="header-username">Sign In</span>
             </button>
@@ -106,7 +122,7 @@
         </div>
 
         <!-- Navigation Tabs (Pic 1 Style) -->
-        <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800">
+        <div class="bg-radar-panel p-1 rounded-xl flex mb-5 border border-slate-800 relative z-40">
             <button id="tab-btn-feed" onclick="switchTab('feed')" class="flex-1 py-2.5 rounded-lg text-sm font-black flex items-center justify-center gap-2 bg-radar-primary text-black transition-all shadow-md">
                 <i class="fas fa-list"></i> FEED
             </button>
@@ -139,10 +155,16 @@
 
         <!-- VIEW: MAP -->
         <div id="view-map" class="hidden">
-            <div class="bg-radar-panel border border-slate-800 rounded-xl p-8 text-center text-slate-400">
-                <i class="fas fa-map-marked-alt text-4xl mb-3 text-slate-600"></i>
-                <h3 class="text-lg font-bold text-white mb-2">Map Radar Offline</h3>
-                <p class="text-sm">The interactive UK mapping system is scheduled for deployment in the next phase.</p>
+            <div class="bg-radar-panel border border-slate-800 rounded-xl p-2 relative">
+                <!-- The Leaflet map container -->
+                <div id="uk-radar-map" class="w-full h-[60vh] rounded-lg bg-black z-10"></div>
+                <div class="absolute bottom-4 left-4 z-20 bg-black/80 border border-radar-primary px-3 py-1 rounded-md text-[10px] font-bold text-radar-primary tracking-widest uppercase flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-radar-primary"></span>
+                    </span>
+                    Live Tracking
+                </div>
             </div>
         </div>
 
@@ -164,11 +186,11 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Transmit Modal (Stable Version + Camera feature) -->
+    <!-- Transmit Modal (With Camera & Hidden GPS extraction) -->
     <div class="modal-overlay" id="transmit-modal">
-        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar">
+        <div class="bg-radar-panel w-full max-w-sm rounded-xl p-5 border border-slate-700 max-h-[90vh] overflow-y-auto hide-scrollbar relative">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-white font-bold text-lg">Transmit Intel</h2>
+                <h2 class="text-white font-bold text-lg flex items-center gap-2"><i class="fas fa-satellite-dish text-radar-primary"></i> Transmit Intel</h2>
                 <i class="fas fa-times text-slate-400 cursor-pointer p-2 hover:text-white transition" onclick="closeModal('transmit-modal')"></i>
             </div>
             
@@ -185,23 +207,24 @@
                 <input type="text" id="post-intel" placeholder="e.g. Only 2 left on front pegs" class="w-full bg-[#050b14] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-radar-primary">
             </div>
             
-            <!-- New Photo Upload Section -->
+            <!-- Photo Upload Section -->
             <div class="mb-4">
                 <label class="block text-xs font-bold text-slate-400 mb-1">Photo Evidence (Optional)</label>
                 <div class="relative w-full border-2 border-dashed border-slate-700 rounded-lg p-4 text-center bg-[#050b14] hover:border-radar-primary transition cursor-pointer" onclick="document.getElementById('post-image').click()">
                     <i class="fas fa-camera text-2xl text-slate-500 mb-2" id="photo-icon"></i>
                     <p class="text-xs text-slate-400 font-bold" id="photo-text">Tap to snap a photo</p>
                     <img id="photo-preview" class="hidden mx-auto max-h-32 rounded mt-2 border border-slate-600 object-cover">
-                    <!-- accept="image/*" capture="environment" opens the back camera on mobile directly -->
                     <input type="file" id="post-image" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
                 </div>
             </div>
             
-            <button onclick="submitPost()" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-green-400 transition"><i class="fas fa-paper-plane mr-2"></i> TRANSMIT</button>
+            <button onclick="submitPost()" id="submit-btn" class="w-full bg-radar-primary text-black font-black py-3 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-green-400 transition flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i> TRANSMIT
+            </button>
         </div>
     </div>
 
-    <!-- Application Logic (Firebase & Auth & DB) -->
+    <!-- Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -225,7 +248,11 @@
         const isFirebaseConfigured = !!firebaseConfig.apiKey;
         let postCount = 0;
         let currentUser = null;
-        let currentImageBase64 = null; // Store the compressed image
+        let currentImageBase64 = null; 
+
+        // Map Variables
+        let liveMap = null;
+        let mapMarkers = [];
 
         // UI Helpers
         window.showToast = (message, type = 'success') => {
@@ -239,7 +266,7 @@
         window.openModal = (id) => document.getElementById(id).style.display = 'flex';
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-        // Tab Switching Logic 
+        // Tab Switching & Map Initialization
         window.switchTab = (tab) => {
             const btns = ['feed', 'map', 'videos'];
             btns.forEach(b => {
@@ -253,7 +280,58 @@
             document.getElementById('view-feed').style.display = tab === 'feed' ? 'block' : 'none';
             document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
             document.getElementById('view-videos').style.display = tab === 'videos' ? 'block' : 'none';
+
+            // IMPORTANT: Leaflet requires a resize check when a hidden map becomes visible
+            if(tab === 'map') {
+                if(!liveMap) initMap();
+                setTimeout(() => { if(liveMap) liveMap.invalidateSize(); }, 100);
+            }
         };
+
+        // Initialize Interactive Map
+        function initMap() {
+            // Center roughly on central UK
+            liveMap = L.map('uk-radar-map').setView([53.4808, -2.2426], 6);
+
+            // Sleek "Dark Matter" tiles from CartoDB to match app styling
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                maxZoom: 19
+            }).addTo(liveMap);
+
+            // Add demo markers for visual effect if no real ones exist yet
+            addMapPin(53.4084, -2.9916, "Adam Green", "SMYTHS - Bromborough", "Hot wheels boulevard set");
+            addMapPin(51.5072, -0.1276, "DiecastDave", "Entertainer, London", "New Mainlines");
+        }
+
+        // Helper to add pins to map
+        function addMapPin(lat, lng, username, locationStr, carStr) {
+            if(!liveMap) return;
+            
+            // Custom glowing HTML marker
+            const radarIcon = L.divIcon({
+                className: 'custom-radar-icon',
+                html: `
+                    <div class="relative flex h-4 w-4">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-radar-primary opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-4 w-4 bg-radar-primary border border-white"></span>
+                    </div>
+                `,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+
+            const marker = L.marker([lat, lng], {icon: radarIcon}).addTo(liveMap);
+            
+            // Popup styling
+            marker.bindPopup(`
+                <div class="text-xs font-sans">
+                    <div class="font-bold text-black border-b pb-1 mb-1">${locationStr}</div>
+                    <div class="text-gray-700">${carStr}</div>
+                    <div class="text-gray-400 italic text-[9px] mt-1">Found by ${username}</div>
+                </div>
+            `);
+        }
 
         // Google Secure Auth Logic
         window.toggleAuth = () => {
@@ -289,12 +367,10 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Compress the image so it fits easily into the database
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600; // Resize to max 600px width
+                    const MAX_WIDTH = 600; 
                     const scaleSize = MAX_WIDTH / img.width;
                     
-                    // Only scale down, don't scale up small images
                     if (scaleSize < 1) {
                         canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scaleSize;
@@ -306,10 +382,8 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Convert to base64 string (Quality 0.7)
                     currentImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     
-                    // Update UI
                     document.getElementById('photo-preview').src = currentImageBase64;
                     document.getElementById('photo-preview').classList.remove('hidden');
                     document.getElementById('photo-icon').classList.add('hidden');
@@ -320,9 +394,10 @@
             reader.readAsDataURL(file);
         };
 
-        // Submit Post logic
+        // Submit Post + GPS Location
         window.submitPost = async () => {
-            const location = document.getElementById('post-location').value.trim();
+            const btn = document.getElementById('submit-btn');
+            const locationStr = document.getElementById('post-location').value.trim();
             const car = document.getElementById('post-car').value.trim();
             const intel = document.getElementById('post-intel').value.trim();
             
@@ -330,48 +405,77 @@
             const avatarUrl = currentUser ? currentUser.photoURL : "";
             const uid = currentUser ? currentUser.uid : "anonymous";
 
-            if(!location || !car) { showToast("Store and Car are required!", "error"); return; }
+            if(!locationStr || !car) { showToast("Store and Car are required!", "error"); return; }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ACQUIRING GPS...';
+            btn.disabled = true;
 
             const postData = {
-                username, avatarUrl, uid, location, car, intel,
-                imageBase64: currentImageBase64, // Attach the compressed image
+                username, avatarUrl, uid, location: locationStr, car, intel,
+                imageBase64: currentImageBase64,
                 timestamp: isFirebaseConfigured ? serverTimestamp() : new Date()
             };
 
-            if (isFirebaseConfigured) {
-                try {
-                    // Send to Firebase
-                    await addDoc(postsRef, postData);
-                    resetForm();
-                } catch (e) { 
-                    showToast("Error saving to database. Image might be too large.", "error"); 
-                    console.error(e);
-                }
+            // Attempt to grab physical GPS coords to plot on map
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        postData.lat = position.coords.latitude;
+                        postData.lng = position.coords.longitude;
+                        finalizePost(postData, btn);
+                    },
+                    async (error) => {
+                        // User denied GPS or it failed, post anyway without map pin
+                        console.warn("GPS failed, transmitting without exact pin", error);
+                        finalizePost(postData, btn);
+                    },
+                    { timeout: 5000 } // Give up on GPS after 5 seconds to not freeze app
+                );
             } else {
-                renderPost(postData, true);
-                resetForm();
+                finalizePost(postData, btn);
             }
         };
 
-        function resetForm() {
+        async function finalizePost(postData, btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRANSMITTING...';
+            if (isFirebaseConfigured) {
+                try {
+                    await addDoc(postsRef, postData);
+                    resetForm(btn);
+                } catch (e) { 
+                    showToast("Error saving. Image might be too large.", "error"); 
+                    console.error(e);
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
+                    btn.disabled = false;
+                }
+            } else {
+                renderPost(postData, true);
+                if(postData.lat) addMapPin(postData.lat, postData.lng, postData.username, postData.location, postData.car);
+                resetForm(btn);
+            }
+        }
+
+        function resetForm(btn) {
             ['post-location','post-car','post-intel'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('post-image').value = ''; // Reset file input
+            document.getElementById('post-image').value = ''; 
             document.getElementById('photo-preview').classList.add('hidden');
             document.getElementById('photo-preview').src = '';
             document.getElementById('photo-icon').classList.remove('hidden');
             document.getElementById('photo-text').textContent = "Tap to snap a photo";
-            currentImageBase64 = null; // Clear image data
+            currentImageBase64 = null; 
             
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> TRANSMIT';
+            btn.disabled = false;
+
             closeModal('transmit-modal');
             showToast("Intel transmitted successfully!");
         }
 
-        // Render Feed Posts (Perfectly matching Pic 1 Aesthetics)
+        // Render Feed Posts
         function renderPost(data, prepend = false) {
             const feed = document.getElementById('feed-container');
             const post = document.createElement('div');
             
-            // Pic 1 Styling: Dark panel, green left border
             post.className = 'bg-radar-panel border border-slate-800 rounded-xl border-l-4 border-l-radar-primary p-4 shadow-lg mb-4';
             
             let timeString = "JUST NOW";
@@ -383,7 +487,6 @@
                 ? `<img src="${data.avatarUrl}" class="w-10 h-10 rounded-full border border-radar-primary object-cover shadow-[0_0_8px_rgba(16,185,129,0.3)]">` 
                 : `<div class="w-10 h-10 rounded-full border border-radar-primary flex items-center justify-center bg-black font-bold text-lg text-radar-primary shadow-[0_0_8px_rgba(16,185,129,0.3)]">${(data.username || 'U').charAt(0).toUpperCase()}</div>`;
 
-            // Check if there is an image in the post
             const imageHTML = data.imageBase64 
                 ? `<img src="${data.imageBase64}" class="w-full h-48 object-cover rounded-lg mb-4 border border-slate-700 shadow-sm" alt="Stock Photo">` 
                 : '';
@@ -399,18 +502,16 @@
                     </div>
                 </div>
                 
-                <!-- Pic 1 Green Location Pill -->
                 <div class="inline-flex items-center gap-1.5 bg-[#0f3a2c] text-radar-primary border border-[#16654a] px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest mb-3">
                     <i class="fas fa-map-marker-alt"></i> ${data.location}
                 </div>
                 
                 <h3 class="text-white font-bold text-lg leading-snug mb-2">${data.car}</h3>
                 
-                ${imageHTML} <!-- Inject the photo here if it exists -->
+                ${imageHTML} 
                 
                 ${data.intel ? `<p class="text-slate-400 text-sm italic mb-4">"${data.intel}"</p>` : ''}
                 
-                <!-- Pic 1 Action Buttons -->
                 <div class="border-t border-slate-800 pt-3 flex justify-between items-center mt-2">
                     <div class="flex gap-2">
                         <a href="https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.car)}&_sacat=0" target="_blank" class="bg-[#0f172a] border border-[#1e3a8a] text-[#60a5fa] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-[#1e3a8a] hover:text-white transition">
@@ -431,6 +532,11 @@
             
             postCount++;
             document.getElementById('post-count').textContent = `${postCount} Reports`;
+
+            // Auto-plot to map if coordinates exist in the db
+            if(data.lat && data.lng) {
+                addMapPin(data.lat, data.lng, data.username, data.location, data.car);
+            }
         }
 
         // Dual-Source Video Fetch
@@ -503,8 +609,7 @@
                 auth = getAuth(app);
                 provider = new GoogleAuthProvider();
 
-                // Listen for Google Auth State Changes
-                onAuthState onAuthStateChanged(auth, (user) => {
+                onAuthStateChanged(auth, (user) => {
                     currentUser = user;
                     const nameSpan = document.getElementById('header-username');
                     const avatarImg = document.getElementById('header-avatar');
@@ -529,6 +634,14 @@
                 onSnapshot(q, (snapshot) => {
                     document.getElementById('feed-container').innerHTML = '';
                     postCount = 0; 
+                    
+                    // Clear existing markers to prevent duplicates on refresh
+                    if(liveMap) {
+                        liveMap.eachLayer((layer) => {
+                            if (layer instanceof L.Marker) liveMap.removeLayer(layer);
+                        });
+                    }
+
                     snapshot.forEach((doc) => renderPost(doc.data()));
                 });
             } else {
