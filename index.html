@@ -87,7 +87,7 @@
     <!-- Top Navigation Bar -->
     <header class="bg-radar-panel border-b border-slate-800 sticky top-0 z-50 shadow-md">
         <div class="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <div class="radar-logo-container">
                     <div class="radar-grid"></div>
                     <div class="radar-sweep"></div>
@@ -98,21 +98,21 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2.5">
                 <button id="garage-btn" class="text-slate-400 hover:text-radar-cyan transition flex flex-col items-center" onclick="openGarageModal()">
                     <i class="fas fa-warehouse text-sm"></i>
                 </button>
-                <div id="user-profile" class="hidden items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-slate-800">
-                    <button type="button" onclick="openCallsignModal()" class="flex items-center gap-2 hover:text-radar-cyan transition group" title="Change Radar Call Sign">
-                        <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700">
-                        <span id="user-name" class="text-xs font-bold text-slate-300 group-hover:text-radar-cyan transition"></span>
-                        <i class="fas fa-pen text-[9px] text-slate-500 group-hover:text-radar-cyan transition"></i>
+                <div id="user-profile" class="hidden items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-full border border-slate-800">
+                    <button type="button" onclick="openCallsignModal()" class="flex items-center gap-1.5 hover:text-radar-cyan transition group" title="Change Radar Call Sign">
+                        <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700 shrink-0">
+                        <span id="user-name" class="text-xs font-bold text-slate-300 group-hover:text-radar-cyan transition max-w-[95px] truncate"></span>
+                        <i class="fas fa-pen text-[9px] text-slate-500 group-hover:text-radar-cyan transition shrink-0"></i>
                     </button>
-                    <button id="logout-btn" class="ml-1 text-slate-500 hover:text-red-500 transition flex items-center justify-center w-5 h-5 border-l border-slate-800 pl-2" title="Log Out">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <button id="logout-btn" type="button" class="ml-1 text-slate-400 hover:text-red-500 transition flex items-center justify-center w-6 h-5 border-l border-slate-700 pl-2 shrink-0" title="Log Out">
+                        <i class="fas fa-sign-out-alt text-xs"></i>
                     </button>
                 </div>
-                <button id="login-btn" class="bg-radar-cyan/10 text-radar-cyan border border-radar-cyan/30 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider hover:bg-radar-cyan/20 transition">
+                <button id="login-btn" type="button" class="bg-radar-cyan/10 text-radar-cyan border border-radar-cyan/30 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider hover:bg-radar-cyan/20 transition">
                     LOGIN
                 </button>
             </div>
@@ -297,13 +297,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, setPersistence, browserLocalPersistence, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // ==========================================
         // PASTE YOUR FIREBASE CONFIG KEYS BELOW
         // ==========================================
         const firebaseConfig = {
-            authDomain: "diecast-radar-5c38d.firebaseapp.com",
+            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
+  authDomain: "diecast-radar-5c38d.firebaseapp.com",
   projectId: "diecast-radar-5c38d",
   storageBucket: "diecast-radar-5c38d.firebasestorage.app",
   messagingSenderId: "918192680035",
@@ -318,13 +319,54 @@
         let uploadedBase64Image = null;
         let allReports = [];
 
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const profileDiv = document.getElementById('user-profile');
+
+        // Always attach Login & Logout listeners so buttons never feel dead
+        loginBtn.addEventListener('click', async () => {
+            if (!auth) {
+                alert("Firebase is not connected yet. Please paste your Firebase config keys into index.html on GitHub.");
+                return;
+            }
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (err) {
+                console.warn("Popup login error:", err.code, err.message);
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment' || err.code === 'auth/cancelled-popup-request') {
+                    // Mobile browser blocked the popup — seamlessly switch to redirect login
+                    try {
+                        await signInWithRedirect(auth, provider);
+                    } catch (redirErr) {
+                        alert("Login error: " + redirErr.message);
+                    }
+                } else if (err.code !== 'auth/popup-closed-by-user') {
+                    alert("Login failed (" + err.code + "): " + err.message);
+                }
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            if (!auth) return;
+            if (confirm("Log out of Diecast Radar UK?")) {
+                try {
+                    await signOut(auth);
+                } catch (err) {
+                    alert("Logout failed: " + err.message);
+                }
+            }
+        });
+
         // Initialize Firebase safely
         try {
             if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                setupAuth();
+                setPersistence(auth, browserLocalPersistence).catch(console.warn);
+                getRedirectResult(auth).catch(err => console.warn("Redirect result error:", err));
+                setupAuthListener();
                 loadFeed();
             } else {
                 console.warn("Firebase keys not yet configured.");
@@ -337,6 +379,7 @@
             }
         } catch (err) {
             console.error("Firebase init error:", err);
+            alert("Firebase failed to initialize: " + err.message);
         }
 
         // Daily Intel Fun Facts
@@ -363,30 +406,17 @@
         }
         loadDailyFact();
 
-        // Authentication & Radar Call Sign Logic
-        function setupAuth() {
-            const loginBtn = document.getElementById('login-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const profileDiv = document.getElementById('user-profile');
-
-            loginBtn.addEventListener('click', () => {
-                const provider = new GoogleAuthProvider();
-                signInWithPopup(auth, provider).catch(err => console.error("Login failed:", err));
-            });
-
-            logoutBtn.addEventListener('click', () => {
-                if (confirm("Log out of Diecast Radar UK?")) {
-                    signOut(auth).catch(err => console.error("Logout failed:", err));
-                }
-            });
-
+        // Authentication State & Radar Call Sign Logic
+        function setupAuthListener() {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUser = user;
                     loginBtn.classList.add('hidden');
                     profileDiv.classList.remove('hidden');
                     profileDiv.classList.add('flex');
-                    document.getElementById('user-avatar').src = user.photoURL;
+
+                    const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'Hunter')}&background=0b1120&color=22c55e`;
+                    document.getElementById('user-avatar').src = user.photoURL || fallbackAvatar;
 
                     // Load saved Radar Call Sign from local storage first for instant display
                     let savedCallsign = localStorage.getItem(`radar_username_${user.uid}`);
