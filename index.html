@@ -103,9 +103,12 @@
                     <i class="fas fa-warehouse text-sm"></i>
                 </button>
                 <div id="user-profile" class="hidden items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-slate-800">
-                    <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700">
-                    <span id="user-name" class="text-xs font-bold text-slate-300"></span>
-                    <button id="logout-btn" class="ml-1 text-slate-500 hover:text-red-500 transition flex items-center justify-center w-5 h-5" title="Log Out">
+                    <button type="button" onclick="openCallsignModal()" class="flex items-center gap-2 hover:text-radar-cyan transition group" title="Change Radar Call Sign">
+                        <img id="user-avatar" src="" alt="Profile" class="w-5 h-5 rounded-full border border-slate-700">
+                        <span id="user-name" class="text-xs font-bold text-slate-300 group-hover:text-radar-cyan transition"></span>
+                        <i class="fas fa-pen text-[9px] text-slate-500 group-hover:text-radar-cyan transition"></i>
+                    </button>
+                    <button id="logout-btn" class="ml-1 text-slate-500 hover:text-red-500 transition flex items-center justify-center w-5 h-5 border-l border-slate-800 pl-2" title="Log Out">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
@@ -266,18 +269,41 @@
         </div>
     </div>
 
+    <!-- RADAR CALL SIGN MODAL -->
+    <div id="callsign-modal" class="fixed inset-0 bg-black/90 z-[110] hidden items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-radar-panel w-full max-w-md rounded-2xl border border-slate-800 p-5 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-white uppercase tracking-wider"><i class="fas fa-user-secret text-radar-cyan mr-2"></i> Radar Call Sign</h2>
+                <button id="close-callsign-btn" onclick="closeCallsignModal()" class="text-slate-400 hover:text-white transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4 leading-relaxed">Choose a Radar Call Sign to display on the live radar instead of your real name. You can change this anytime by tapping your call sign at the top.</p>
+            <form id="callsign-form" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5 tracking-wider uppercase">Your Radar Call Sign</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-radar-cyan font-bold text-sm">@</span>
+                        <input type="text" id="callsign-input" required minlength="3" maxlength="20" placeholder="e.g. PegHunter_UK" class="w-full bg-black/60 border border-radar-cyan/50 rounded-lg py-2.5 pl-8 pr-3 text-white text-sm focus:outline-none focus:border-radar-cyan">
+                    </div>
+                    <p id="callsign-error" class="text-red-400 text-xs mt-1.5 hidden"></p>
+                </div>
+                <button type="submit" class="w-full mt-2 bg-radar-cyan text-black py-3 rounded-lg font-bold text-xs tracking-wider uppercase shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:bg-green-400 transition">
+                    Save Radar Call Sign
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // ==========================================
-        // PASTE YOUR FIREBASE CONFIG KEYS HERE!
+        // PASTE YOUR FIREBASE CONFIG KEYS BELOW
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyD_4xmL3EHphSGww2W7lg2kl2-iEzpNcgg",
-  authDomain: "diecast-radar-5c38d.firebaseapp.com",
+            authDomain: "diecast-radar-5c38d.firebaseapp.com",
   projectId: "diecast-radar-5c38d",
   storageBucket: "diecast-radar-5c38d.firebasestorage.app",
   messagingSenderId: "918192680035",
@@ -287,50 +313,108 @@
 
         let app, db, auth;
         let currentUser = null;
+        let currentCallsign = null;
         let map, markers = [];
         let uploadedBase64Image = null;
-        let allReports = []; 
+        let allReports = [];
 
+        // Initialize Firebase safely
         try {
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 setupAuth();
                 loadFeed();
             } else {
-                renderDemoFeed();
+                console.warn("Firebase keys not yet configured.");
+                document.getElementById('feed-list').innerHTML = `
+                    <div class="bg-radar-panel border border-slate-800 rounded-xl p-6 text-center">
+                        <i class="fas fa-satellite-dish text-radar-cyan text-2xl mb-2"></i>
+                        <p class="text-sm font-bold text-white mb-1">Radar Ready for Uplink</p>
+                        <p class="text-xs text-slate-400">Paste your Firebase config keys in index.html to connect the live UK feed.</p>
+                    </div>`;
             }
-        } catch(e) {
-            renderDemoFeed();
+        } catch (err) {
+            console.error("Firebase init error:", err);
         }
 
+        // Daily Intel Fun Facts
+        const dailyFacts = [
+            "The very first Hot Wheels car ever produced in 1968 was a dark blue Custom Camaro.",
+            "The rarest Hot Wheels car in existence is the 1969 Pink Rear-Loading Beach Bomb, valued at over £120,000.",
+            "Matchbox got its name in 1953 because Jack Odell designed a miniature steamroller small enough to fit inside a matchbox for his daughter's school.",
+            "Hot Wheels Treasure Hunts were first introduced in 1995 with only 10,000 of each model made worldwide.",
+            "Super Treasure Hunts feature Spectraflame paint and Real Riders rubber tyres, plus a tiny 'TH' logo hidden on the bodywork.",
+            "Over 8 billion Hot Wheels cars have been produced since 1968 — roughly 16 cars every single second!",
+            "The iconic orange Hot Wheels track was designed so cars could hit scale speeds of over 200 mph.",
+            "The original 1968 Hot Wheels lineup is known to collectors as the 'Sweet 16'.",
+            "Before founding Hot Wheels, designer Harry Bradley actually worked as a real car designer for General Motors.",
+            "In 1997, Mattel (makers of Hot Wheels) bought Tyco Toys, which meant rival brands Hot Wheels and Matchbox became part of the same family.",
+            "UK supermarkets like Aldi, Asda, and B&M often receive 'International Short Cards', whereas Smyths and The Entertainer frequently stock US Long Cards.",
+            "The flame logo inside a circle on the card behind a car signifies a Regular Treasure Hunt, while a gold flame marks a Super Treasure Hunt!"
+        ];
+
+        function loadDailyFact() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            document.getElementById('daily-fact-text').textContent = dailyFacts[dayOfYear % dailyFacts.length];
+        }
+        loadDailyFact();
+
+        // Authentication & Radar Call Sign Logic
         function setupAuth() {
             const loginBtn = document.getElementById('login-btn');
-            const profileDiv = document.getElementById('user-profile');
             const logoutBtn = document.getElementById('logout-btn');
-            const provider = new GoogleAuthProvider();
+            const profileDiv = document.getElementById('user-profile');
 
             loginBtn.addEventListener('click', () => {
-                signInWithPopup(auth, provider).catch(e => console.error("Login failed", e));
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider).catch(err => console.error("Login failed:", err));
             });
 
             logoutBtn.addEventListener('click', () => {
-                if(confirm("Are you sure you want to log out of the Radar?")) {
-                    signOut(auth).catch(e => console.error("Logout failed", e));
+                if (confirm("Log out of Diecast Radar UK?")) {
+                    signOut(auth).catch(err => console.error("Logout failed:", err));
                 }
             });
 
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUser = user;
                     loginBtn.classList.add('hidden');
                     profileDiv.classList.remove('hidden');
                     profileDiv.classList.add('flex');
                     document.getElementById('user-avatar').src = user.photoURL;
-                    document.getElementById('user-name').textContent = user.displayName.split(' ')[0]; 
+
+                    // Load saved Radar Call Sign from local storage first for instant display
+                    let savedCallsign = localStorage.getItem(`radar_username_${user.uid}`);
+
+                    // Also check Firestore so the Radar Call Sign syncs across devices
+                    if (!savedCallsign && db) {
+                        try {
+                            const userSnap = await getDoc(doc(db, "users", user.uid));
+                            if (userSnap.exists() && userSnap.data().username) {
+                                savedCallsign = userSnap.data().username;
+                                localStorage.setItem(`radar_username_${user.uid}`, savedCallsign);
+                            }
+                        } catch (err) {
+                            console.warn("Could not read user profile from Firestore:", err);
+                        }
+                    }
+
+                    if (savedCallsign) {
+                        currentCallsign = savedCallsign;
+                        document.getElementById('user-name').textContent = savedCallsign;
+                    } else {
+                        currentCallsign = null;
+                        document.getElementById('user-name').textContent = 'Set Call Sign';
+                        window.openCallsignModal(true);
+                    }
                 } else {
                     currentUser = null;
+                    currentCallsign = null;
                     loginBtn.classList.remove('hidden');
                     profileDiv.classList.add('hidden');
                     profileDiv.classList.remove('flex');
@@ -338,50 +422,137 @@
             });
         }
 
-        window.initMap = function() {
-            if (map) return;
-            map = L.map('map', { zoomControl: false }).setView([52.5, -1.5], 6);
-            L.control.zoom({ position: 'topleft' }).addTo(map);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        }
+        // Tab Switching
+        window.switchTab = function(tab) {
+            ['feed', 'map', 'videos'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md text-slate-400 hover:text-white transition-all";
+            });
 
-        window.switchTab = function(tabName) {
-            ['tab-feed', 'tab-map', 'tab-videos'].forEach(id => document.getElementById(id).className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md text-slate-400 hover:text-white transition-all");
-            ['view-feed', 'view-map', 'view-videos'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
 
-            if (tabName === 'feed') {
-                document.getElementById('tab-feed').className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
-                document.getElementById('view-feed').classList.remove('hidden');
-            } else if (tabName === 'map') {
-                document.getElementById('tab-map').className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
-                document.getElementById('view-map').classList.remove('hidden');
+            if (tab === 'map') {
                 initMap();
                 setTimeout(() => {
-                    map.invalidateSize();
-                    refreshMapMarkers(); 
-                }, 100);
-            } else if (tabName === 'videos') {
-                document.getElementById('tab-videos').className = "flex-1 py-2 text-xs font-bold tracking-wider rounded-md bg-radar-cyan text-black transition-all";
-                document.getElementById('view-videos').classList.remove('hidden');
+                    if (map) {
+                        map.invalidateSize();
+                        window.refreshMapMarkers();
+                    }
+                }, 150);
+            } else if (tab === 'videos') {
                 fetchDiecastNews();
             }
         }
 
+        // Report Stock Modal Controls
         window.openModal = function() {
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY" && !currentUser) { alert("Please Login to Transmit!"); return; }
             const modal = document.getElementById('report-modal');
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            setTimeout(() => document.getElementById('modal-content').classList.remove('translate-y-full'), 10);
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
         }
 
         window.closeModal = function() {
-            document.getElementById('modal-content').classList.add('translate-y-full');
+            const modal = document.getElementById('report-modal');
+            const content = document.getElementById('modal-content');
+            content.classList.add('translate-y-full');
             setTimeout(() => {
-                const m = document.getElementById('report-modal'); m.classList.add('hidden'); m.classList.remove('flex');
-                document.getElementById('report-form').reset(); window.removePhoto(new Event('click'));
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('report-form').reset();
+                window.removePhoto();
             }, 300);
         }
 
+        // Garage ISO Modal Controls
+        window.openGarageModal = function() {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`iso-${i}`).value = localStorage.getItem(`iso-${i}`) || '';
+            }
+            const modal = document.getElementById('garage-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        window.closeGarageModal = function() {
+            document.getElementById('garage-modal').classList.add('hidden');
+            document.getElementById('garage-modal').classList.remove('flex');
+        }
+
+        document.getElementById('garage-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            for (let i = 1; i <= 5; i++) {
+                localStorage.setItem(`iso-${i}`, document.getElementById(`iso-${i}`).value.trim());
+            }
+            window.closeGarageModal();
+        });
+
+        // Radar Call Sign Modal Controls
+        window.openCallsignModal = function(isFirstTime = false) {
+            const modal = document.getElementById('callsign-modal');
+            const input = document.getElementById('callsign-input');
+            const errorEl = document.getElementById('callsign-error');
+            const closeBtn = document.getElementById('close-callsign-btn');
+
+            errorEl.classList.add('hidden');
+            input.value = currentCallsign || '';
+            closeBtn.style.display = (isFirstTime && !currentCallsign) ? 'none' : 'block';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        window.closeCallsignModal = function() {
+            if (!currentCallsign && currentUser) return;
+            const modal = document.getElementById('callsign-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('callsign-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('callsign-input');
+            const errorEl = document.getElementById('callsign-error');
+            const cleanCallsign = input.value.trim().replace(/^@+/, '');
+
+            if (cleanCallsign.length < 3 || cleanCallsign.length > 20) {
+                errorEl.textContent = "Radar Call Sign must be between 3 and 20 characters.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9 _-]+$/.test(cleanCallsign)) {
+                errorEl.textContent = "Use only letters, numbers, spaces, underscores, or hyphens.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            currentCallsign = cleanCallsign;
+            document.getElementById('user-name').textContent = cleanCallsign;
+
+            if (currentUser) {
+                localStorage.setItem(`radar_username_${currentUser.uid}`, cleanCallsign);
+                if (db) {
+                    try {
+                        await setDoc(doc(db, "users", currentUser.uid), {
+                            username: cleanCallsign,
+                            updatedAt: serverTimestamp()
+                        }, { merge: true });
+                    } catch (err) {
+                        console.warn("Could not save Radar Call Sign to Firestore, using local backup:", err);
+                    }
+                }
+            }
+
+            window.closeCallsignModal();
+        });
+
+        // Photo Upload & Compression
         document.getElementById('photo-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -391,281 +562,312 @@
                 img.onload = function() {
                     const canvas = document.getElementById('compression-canvas');
                     const ctx = canvas.getContext('2d');
-                    let width = img.width, height = img.height;
-                    if (width > 800) { height = Math.round((height *= 800 / width)); width = 800; }
-                    canvas.width = width; canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
+                    const maxW = 800;
+                    const scale = Math.min(1, maxW / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     uploadedBase64Image = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById('image-preview').src = uploadedBase64Image;
                     document.getElementById('image-preview-container').style.display = 'block';
-                }
+                };
                 img.src = event.target.result;
-            }
+            };
             reader.readAsDataURL(file);
         });
 
         window.removePhoto = function(e) {
-            e.preventDefault(); e.stopPropagation(); uploadedBase64Image = null;
+            if (e) e.stopPropagation();
+            uploadedBase64Image = null;
             document.getElementById('photo-upload').value = '';
+            document.getElementById('image-preview').src = '';
             document.getElementById('image-preview-container').style.display = 'none';
         }
 
-        window.openGarageModal = function() {
-            document.getElementById('garage-modal').classList.remove('hidden');
-            document.getElementById('garage-modal').classList.add('flex');
-            for(let i=1; i<=5; i++) {
-                const saved = localStorage.getItem(`iso-${i}`);
-                if(saved) document.getElementById(`iso-${i}`).value = saved;
-            }
-        }
-        
-        window.closeGarageModal = function() {
-            document.getElementById('garage-modal').classList.add('hidden');
-            document.getElementById('garage-modal').classList.remove('flex');
+        // Leaflet Map Engine
+        function initMap() {
+            if (map) return;
+            map = L.map('map', { zoomControl: false }).setView([54.0, -2.5], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
         }
 
         window.refreshMapMarkers = function() {
             if (!map) return;
-            markers.forEach(m => map.removeLayer(m)); 
+            markers.forEach(m => map.removeLayer(m));
             markers = [];
-            
+
             allReports.forEach(data => {
-                if(data.location) {
-                    const icon = L.divIcon({ className: 'custom-div-icon', html: "<div class='gps-pulse'></div>", iconSize: [20,20] });
-                    const m = L.marker([data.location.lat, data.location.lng], {icon: icon})
-                        .bindPopup(`<b style="color:black">${data.store}</b><br><span style="color:#333">${data.details}</span>`)
-                        .addTo(map);
-                    markers.push(m);
+                if (data.location && data.location.lat && data.location.lng) {
+                    const pulseIcon = L.divIcon({
+                        className: 'custom-gps-marker',
+                        html: '<div class="gps-pulse"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+                    const marker = L.marker([data.location.lat, data.location.lng], { icon: pulseIcon }).addTo(map);
+                    const popupHtml = `
+                        <div style="color:#050510; min-width:160px;">
+                            <div style="font-weight:bold; font-size:13px; margin-bottom:2px;">${escapeHtml(data.store || 'Unknown Store')}</div>
+                            <div style="font-size:12px; margin-bottom:4px;">${escapeHtml(data.details || '')}</div>
+                            <div style="font-size:10px; color:#475569;">Spotted by ${escapeHtml(data.user || 'Anonymous Hunter')}</div>
+                        </div>`;
+                    marker.bindPopup(popupHtml);
+                    markers.push(marker);
                 }
             });
         }
 
-        document.getElementById('garage-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            for(let i=1; i<=5; i++) localStorage.setItem(`iso-${i}`, document.getElementById(`iso-${i}`).value);
-            closeGarageModal();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "SAVED!"; btn.classList.add('bg-radar-cyan', 'text-black');
-            setTimeout(() => { btn.innerText = originalText; btn.classList.remove('bg-radar-cyan', 'text-black'); }, 1500);
-        });
-
+        // Transmit Intel Form Submission
         document.getElementById('report-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!db) { alert("Demo Mode!"); closeModal(); return; }
-            const btn = e.submitter; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transmitting...';
+            if (!db) { closeModal(); return; }
+            if (currentUser && !currentCallsign) {
+                window.openCallsignModal(true);
+                return;
+            }
+            const btn = e.submitter;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transmitting...';
             try {
                 let coords = null;
                 if ("geolocation" in navigator) {
                     coords = await new Promise((res) => navigator.geolocation.getCurrentPosition(
-                        p => res({ lat: p.coords.latitude, lng: p.coords.longitude }), err => res(null), { timeout: 5000 }
+                        p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                        () => res(null),
+                        { timeout: 5000 }
                     ));
                 }
                 await addDoc(collection(db, "reports"), {
-                    store: document.getElementById('store-name').value,
-                    details: document.getElementById('car-details').value,
+                    store: document.getElementById('store-name').value.trim(),
+                    details: document.getElementById('car-details').value.trim(),
                     timestamp: serverTimestamp(),
-                    user: currentUser ? currentUser.displayName : 'Anonymous Hunter',
+                    user: currentCallsign || 'Anonymous Hunter',
                     avatar: currentUser ? currentUser.photoURL : null,
                     image: uploadedBase64Image,
                     grail: localStorage.getItem('iso-1') || null,
                     location: coords
                 });
                 closeModal();
-            } catch (error) { alert("Failed."); } finally { btn.innerHTML = '<i class="fas fa-paper-plane"></i> Transmit'; }
+            } catch (error) {
+                console.error("Transmit failed:", error);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Transmit';
+            }
         });
 
+        // Live Feed Listener & Rendering
         function loadFeed() {
             const q = query(collection(db, "reports"), orderBy("timestamp", "desc"), limit(25));
             onSnapshot(q, (snapshot) => {
-                const list = document.getElementById('feed-list'); list.innerHTML = '';
-                allReports = []; 
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    allReports.push(data); 
-                    
-                    const timeString = data.timestamp ? timeAgo(data.timestamp.toDate()) : 'Just now';
-                    const avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${data.user}&background=0b1120&color=22c55e`;
-                    const imageHtml = data.image ? `<div class="mt-3 rounded-lg overflow-hidden max-h-60"><img src="${data.image}" class="w-full h-full object-cover"></div>` : '';
-                    const grailHtml = data.grail ? `<div class="mt-1 flex items-center gap-1 text-[10px] text-radar-cyan font-mono tracking-wider"><i class="fas fa-crosshairs"></i> ISO: ${data.grail}</div>` : '';
-
-                    // The Exact Store search URL (used at the top)
-                    const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.store)}`;
-                    
-                    // The Nearest Brand search logic (used in the bottom button)
-                    const brandName = data.store.split(/[\s,]+/)[0]; // Extracts "Smyths" from "Smyths Toys"
-                    const displayBrand = brandName.length > 8 ? "Store" : brandName; // Keeps button tidy
-                    const nearestUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(brandName + ' near me')}`;
-                    
-                    const ebaySearchUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(data.details)}`;
-
-                    const card = document.createElement('div');
-                    card.className = "bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800";
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-3">
-                                <img src="${avatarUrl}" class="w-8 h-8 rounded-full border border-slate-700">
-                                <div>
-                                    <a href="${directionsUrl}" target="_blank" title="Get Directions to this Exact Store" class="font-bold text-sm text-white hover:text-radar-cyan transition-colors flex items-center gap-1">
-                                        ${data.store} <i class="fas fa-external-link-alt text-[10px] text-slate-500"></i>
-                                    </a>
-                                    <p class="text-xs text-slate-400 font-mono">${data.user} • ${timeString}</p>
-                                    ${grailHtml}
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-sm text-slate-300 leading-relaxed">${data.details}</p>
-                        ${imageHtml}
-                        
-                        <div class="mt-3 pt-3 border-t border-slate-800 flex gap-2">
-                            <a href="${nearestUrl}" target="_blank" title="Find a ${brandName} near your current location" class="flex-1 flex items-center justify-center gap-1.5 bg-slate-800/50 hover:bg-slate-700 border border-slate-700 rounded-lg py-2.5 text-[10px] sm:text-xs font-bold text-radar-cyan transition-all uppercase tracking-wider">
-                                <i class="fas fa-map-marker-alt text-sm"></i> Nearest ${displayBrand}
-                            </a>
-                            <a href="${ebaySearchUrl}" target="_blank" class="flex-1 flex items-center justify-center gap-1.5 bg-slate-800/50 hover:bg-slate-700 border border-slate-700 rounded-lg py-2.5 text-[10px] sm:text-xs font-bold text-blue-400 transition-all uppercase tracking-wider">
-                                <i class="fab fa-ebay text-lg"></i> Check eBay
-                            </a>
-                        </div>
-                    `;
-                    list.appendChild(card);
+                allReports = [];
+                snapshot.forEach((docSnap) => {
+                    allReports.push(docSnap.data());
                 });
-                
-                refreshMapMarkers(); 
+                renderFeed(document.getElementById('search-input').value);
+                if (map) window.refreshMapMarkers();
             });
         }
 
+        function renderFeed(searchTerm = '') {
+            const list = document.getElementById('feed-list');
+            list.innerHTML = '';
+            const filter = searchTerm.trim().toLowerCase();
+
+            const filtered = allReports.filter(data => {
+                if (!filter) return true;
+                return (data.store || '').toLowerCase().includes(filter) ||
+                       (data.details || '').toLowerCase().includes(filter) ||
+                       (data.user || '').toLowerCase().includes(filter);
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs font-mono uppercase tracking-wider">No radar signals found.</div>`;
+                return;
+            }
+
+            filtered.forEach(data => {
+                const timeString = data.timestamp ? timeAgo(data.timestamp.toDate()) : 'Just now';
+                const avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user || 'Hunter')}&background=0b1120&color=22c55e`;
+                const storeText = data.store || 'Unknown Store';
+                const detailsText = data.details || '';
+                const brandWord = storeText.split(/[\s,]+/)[0] || storeText;
+
+                const exactStoreUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeText)}`;
+                const nearestStoreUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(brandWord + ' near me')}`;
+                const ebayUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(detailsText)}&LH_Sold=1&LH_Complete=1`;
+
+                const card = document.createElement('div');
+                card.className = "bg-radar-panel border border-slate-800 rounded-xl p-4 shadow-lg space-y-3";
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <img src="${avatarUrl}" alt="Avatar" class="w-8 h-8 rounded-full border border-radar-cyan/40 object-cover">
+                            <div>
+                                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                                    <span>${escapeHtml(data.user || 'Anonymous Hunter')}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-mono">${timeString}</div>
+                            </div>
+                        </div>
+                        <a href="${exactStoreUrl}" target="_blank" class="text-right group">
+                            <span class="inline-flex items-center gap-1 bg-radar-cyan/10 text-radar-cyan border border-radar-cyan/30 px-2.5 py-1 rounded-full text-[11px] font-bold group-hover:bg-radar-cyan group-hover:text-black transition">
+                                <i class="fas fa-store text-[10px]"></i> ${escapeHtml(storeText)} <i class="fas fa-external-link-alt text-[9px] ml-0.5"></i>
+                            </span>
+                        </a>
+                    </div>
+
+                    ${data.grail ? `
+                        <div class="bg-black/40 border border-yellow-500/20 rounded-md px-2.5 py-1.5 flex items-center gap-2">
+                            <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                            <span class="text-[10px] text-slate-300"><span class="text-yellow-400 font-bold uppercase">ISO Grail:</span> ${escapeHtml(data.grail)}</span>
+                        </div>` : ''}
+
+                    <p class="text-sm text-slate-200 leading-relaxed whitespace-pre-line">${escapeHtml(detailsText)}</p>
+
+                    ${data.image ? `
+                        <div class="rounded-lg overflow-hidden border border-slate-800 bg-black">
+                            <img src="${data.image}" alt="Stock Photo" class="w-full max-h-64 object-cover">
+                        </div>` : ''}
+
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                        <a href="${ebayUrl}" target="_blank" class="flex items-center justify-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 py-2 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition">
+                            <i class="fas fa-tags"></i> Check eBay Prices
+                        </a>
+                        <a href="${nearestStoreUrl}" target="_blank" class="flex items-center justify-center gap-1.5 bg-radar-cyan/10 hover:bg-radar-cyan/20 text-radar-cyan border border-radar-cyan/30 py-2 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition">
+                            <i class="fas fa-location-arrow"></i> Nearest ${escapeHtml(brandWord)}
+                        </a>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderFeed(e.target.value);
+        });
+
+        // Triple-Threat YouTube Video Feed (Lamley, The Wheel Collector, Custom Collects)
         async function fetchDiecastNews() {
             const container = document.getElementById('view-videos');
             const list = document.getElementById('news-feed-list');
             const loading = document.getElementById('news-loading');
-            
-            if (container.dataset.loaded === 'true') return; 
-            
-            try {
-                const lamleyUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=lamleygroup');
-                const twcUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg'); 
-                const customUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UC1T090dK4W88Zk-UoA_zLuw'); 
-                
-                const [lamleyRes, twcRes, customRes] = await Promise.all([
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${lamleyUrl}`),
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${twcUrl}`),
-                    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${customUrl}`)
-                ]);
-                
-                const lamleyData = await lamleyRes.json();
-                const twcData = await twcRes.json();
-                const customData = await customRes.json();
-                
-                let videos = [];
-                
-                if (lamleyData && lamleyData.items) videos = videos.concat(lamleyData.items.map(v => ({...v, author: "Lamley Group"})));
-                if (twcData && twcData.items) videos = videos.concat(twcData.items.map(v => ({...v, author: "The Wheel Collector"})));
-                if (customData && customData.items) videos = videos.concat(customData.items.map(v => ({...v, author: "Custom Collects"})));
-                
-                if (videos.length === 0) throw new Error("API returned empty data");
-                
-                videos.sort((a, b) => new Date(b.pubDate.replace(' ', 'T')) - new Date(a.pubDate.replace(' ', 'T')));
-                videos = videos.slice(0, 15);
-                
-                renderVideos(videos);
+            if (container.dataset.loaded === 'true') return;
 
-            } catch(e) {
-                console.warn("Live fetch failed, deploying failsafe cache...", e);
-                const failsafeVideos = [
+            const feeds = [
+                { name: 'Lamley Group', url: 'https://www.youtube.com/feeds/videos.xml?user=lamleygroup' },
+                { name: 'The Wheel Collector', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCBjfoXLhVwWlBAhupXNI5zg' },
+                { name: 'Custom Collects', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqQ9X4m0Y_xL9xN6v6n6v6g' }
+            ];
+
+            let allVideos = [];
+
+            const results = await Promise.allSettled(feeds.map(async (feed) => {
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.url)}`;
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error('Proxy fetch failed');
+                const xmlText = await res.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                const entries = Array.from(xmlDoc.querySelectorAll("entry")).slice(0, 5);
+
+                return entries.map(entry => {
+                    const videoId = entry.querySelector("videoId")?.textContent || entry.getElementsByTagName("yt:videoId")[0]?.textContent;
+                    const title = entry.querySelector("title")?.textContent || 'Diecast Video';
+                    const published = entry.querySelector("published")?.textContent || new Date().toISOString();
+                    return {
+                        title,
+                        link: `https://www.youtube.com/watch?v=${videoId}`,
+                        pubDate: published,
+                        author: feed.name,
+                        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+                    };
+                }).filter(v => v.link && !v.link.endsWith('undefined'));
+            }));
+
+            results.forEach(r => {
+                if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+                    allVideos = allVideos.concat(r.value);
+                }
+            });
+
+            if (allVideos.length === 0) {
+                allVideos = [
                     {
                         title: "HOT WHEELS SPEEDRUN: 10 STORES BEFORE LUNCH TIME !!",
                         link: "https://www.youtube.com/watch?v=soR54mMb8DM",
                         pubDate: new Date().toISOString(),
                         author: "Custom Collects",
-                        thumbnail: "https://i.ytimg.com/vi/soR54mMb8DM/maxresdefault.jpg"
+                        thumbnail: "https://i.ytimg.com/vi/soR54mMb8DM/hqdefault.jpg"
                     },
                     {
-                        title: "Hunting for Rare Hot Wheels 🔥 at B&M Prescot",
+                        title: "Hunting for Rare Hot Wheels at B&M Prescot",
                         link: "https://www.youtube.com/watch?v=l5zchpdju5w",
-                        pubDate: new Date().toISOString(),
+                        pubDate: new Date(Date.now() - 43200000).toISOString(),
                         author: "The Wheel Collector",
-                        thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/maxresdefault.jpg"
+                        thumbnail: "https://i.ytimg.com/vi/l5zchpdju5w/hqdefault.jpg"
                     },
                     {
-                        title: "Hot Wheels 2027 A Case Unboxing",
+                        title: "Hot Wheels 2027 A Case Unboxing: New Ferrari & Boneshaker",
                         link: "https://www.youtube.com/watch?v=4ECWszkiJ5E",
-                        pubDate: new Date(Date.now() - 40000000).toISOString(),
+                        pubDate: new Date(Date.now() - 86400000).toISOString(),
                         author: "Lamley Group",
-                        thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/maxresdefault.jpg"
+                        thumbnail: "https://i.ytimg.com/vi/4ECWszkiJ5E/hqdefault.jpg"
                     }
                 ];
-                renderVideos(failsafeVideos);
             }
-            
-            function renderVideos(videoArray) {
-                loading.style.display = 'none';
-                videoArray.forEach(item => {
-                    const title = item.title;
-                    const link = item.link;
-                    const pubDateRaw = item.pubDate; 
-                    const pubDate = pubDateRaw ? new Date(pubDateRaw.replace(' ', 'T')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Recent';
-                    const author = item.author;
-                    let imgSrc = item.thumbnail.replace('hqdefault.jpg', 'maxresdefault.jpg'); 
 
-                    const card = document.createElement('div');
-                    card.className = "bg-radar-panel rounded-xl overflow-hidden shadow-lg border border-slate-800 transition-all hover:border-radar-cyan";
-                    
-                    card.innerHTML = `
-                        <div class="relative cursor-pointer h-44" onclick="window.open('${link}', '_blank')">
-                            <img src="${imgSrc}" class="w-full h-full object-cover opacity-80" onerror="this.src='${item.thumbnail}'">
-                            <i class="fab fa-youtube absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl text-red-600 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"></i>
+            allVideos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            loading.classList.add('hidden');
+            list.innerHTML = '';
+
+            allVideos.slice(0, 12).forEach(item => {
+                const pubDate = new Date(item.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                const card = document.createElement('div');
+                card.className = "bg-radar-panel rounded-xl overflow-hidden shadow-lg border border-slate-800 hover:border-radar-cyan/50 transition-all";
+                card.innerHTML = `
+                    <div class="relative cursor-pointer" onclick="window.open('${item.link}', '_blank')">
+                        <img src="${item.thumbnail}" class="w-full h-48 object-cover opacity-85 hover:opacity-100 transition-opacity" alt="${escapeHtml(item.title)}">
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <i class="fab fa-youtube text-5xl text-red-600 drop-shadow-[0_0_15px_rgba(0,0,0,0.8)] opacity-90"></i>
                         </div>
-                        <div class="p-4">
-                            <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
-                                <span class="text-radar-cyan"><i class="fas fa-video mr-1"></i> ${author}</span>
-                                <span class="text-slate-400 font-mono">${pubDate}</span>
-                            </div>
-                            <h3 class="text-white font-bold text-sm leading-snug mb-3 line-clamp-2">${title}</h3>
-                            <a href="${link}" target="_blank" class="block text-center w-full bg-[#450a0a]/80 border border-[#7f1d1d] text-red-200 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-900 transition">Watch Video</a>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-radar-cyan text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-video mr-1"></i> ${escapeHtml(item.author)}</span>
+                            <span class="text-slate-400 text-[10px] font-mono">${pubDate}</span>
                         </div>
-                    `;
-                    list.appendChild(card);
-                });
-                container.dataset.loaded = 'true';
-            }
+                        <h3 class="text-white font-bold text-sm leading-snug mb-3">${escapeHtml(item.title)}</h3>
+                        <a href="${item.link}" target="_blank" class="w-full flex items-center justify-center text-slate-200 hover:text-white bg-red-900/60 hover:bg-red-800/80 border border-red-700/50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                            Watch Video
+                        </a>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            container.dataset.loaded = 'true';
         }
 
-        function initDailyFact() {
-            const facts = [
-                "The original 1968 Hot Wheels 'Sweet 16' featured spectraflame paint and redline tires.",
-                "Matchbox got its name because the original toys were sold in replica matchboxes to comply with a school rule.",
-                "The 1969 Pink Rear-Loading Volkswagen Beach Bomb is considered the rarest Hot Wheels, valued over $150,000.",
-                "Treasure Hunts were introduced in 1995 to drive collector interest. Only 10,000 of each were made initially."
-            ];
-            document.getElementById('daily-fact-text').textContent = facts[Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % facts.length];
-        }
-
+        // Helpers
         function timeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
-            let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + "y ago";
-            interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + "m ago";
-            interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + "d ago";
-            interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + "h ago";
-            interval = seconds / 60; if (interval > 1) return Math.floor(interval) + " min ago";
-            return "Just now";
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
         }
 
-        function renderDemoFeed() {
-            document.getElementById('feed-list').innerHTML = `
-                <div class="bg-radar-panel p-4 rounded-xl shadow-lg border border-slate-800">
-                    <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">UK</div><div><h3 class="font-bold text-sm">Demo Mode Active</h3></div></div>
-                    <p class="text-sm text-slate-300">Add your Firebase API keys to see live data!</p>
-                </div>`;
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
-
-        document.getElementById('search-input').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            Array.from(document.getElementById('feed-list').children).forEach(post => {
-                post.style.display = post.innerText.toLowerCase().includes(term) ? 'block' : 'none';
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => initDailyFact());
     </script>
 </body>
 </html>
